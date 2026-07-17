@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Treasury Firepower Audit — Cobalt Commercial Credit</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- report/print brand tokens (Cobalt client-facing brand — unchanged) ---- */
+    --navy:#002347;
+    --cobalt:#0047AB;
+    --secondary:#1a4b8c;
+    --tertiary:#4a7fc4;
+    --line:#d9e2ec;
+    --muted:#5a6b7d;
+    --neg:#b3261e;
+    --pos:#1a7f37;
+    --font-head:'Sora', sans-serif;
+    --font-body:'IBM Plex Sans', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+
+    /* ---- app chrome tokens (matches other cobalt-* internal tools) ---- */
+    --bg:#F3F4F2; --surface:#FFFFFF; --surface-sunk:#ECEDEA;
+    --ink:#15171C; --ink-soft:#565C68; --ink-faint:#8B909B; --chrome-line:#DDE0E3;
+    --chrome-cobalt:#0047AB; --chrome-cobalt-dark:#003580;
+    --chrome-red:#A32A2A; --chrome-red-tint:#F7E7E5; --chrome-green:#1B7A43;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(21,23,28,0.04), 0 8px 24px -12px rgba(21,23,28,0.12);
+    --chrome-display:'Source Serif 4', Georgia, serif;
+    --chrome-body:'Inter', system-ui, -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--chrome-body);color:var(--ink);background:var(--bg);font-feature-settings:'tnum' 1;font-variant-numeric:tabular-nums;}
+  .display{font-family:var(--chrome-display);}
+
+  /* ---------- auth gate ---------- */
+  .authgate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:100;}
+  .authcard{background:var(--surface);border:1px solid var(--chrome-line);border-radius:var(--radius);box-shadow:var(--shadow);padding:36px 34px;width:340px;}
+  .authcard h1{font-size:20px;margin:0 0 4px;font-weight:600;}
+  .authcard .sub{font-size:12.5px;color:var(--ink-soft);margin:0 0 22px;}
+  .authcard label{display:block;font-size:11.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.05em;margin:14px 0 5px;}
+  .authcard input{width:100%;padding:9px 11px;border:1px solid var(--chrome-line);border-radius:8px;font-family:inherit;font-size:14px;}
+  .authcard button{width:100%;margin-top:20px;}
+  .authcard .err{display:none;color:var(--chrome-red);background:var(--chrome-red-tint);border-radius:8px;padding:9px 11px;font-size:12.5px;margin-top:14px;}
+  .authcard .err.show{display:block;}
+
+  /* ---------- topbar / chrome ---------- */
+  .topbar{max-width:1080px;margin:0 auto;padding:24px 20px 0;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .topbar .brand{display:flex;align-items:center;gap:12px;}
+  .topbar .brand-mark{width:34px;height:34px;flex-shrink:0;}
+  .topbar .brand h1{font-size:19px;margin:0;font-weight:600;letter-spacing:-.01em;}
+  .topbar .brand p{margin:1px 0 0;font-size:12px;color:var(--ink-soft);}
+  .topbar .actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  select.btn{font-family:inherit;}
+  .tabstrip{max-width:1080px;margin:16px auto 0;padding:0 20px;display:flex;gap:6px;border-bottom:1px solid var(--chrome-line);}
+  .tabstrip button{
+    font-family:var(--chrome-body);font-size:13px;font-weight:600;color:var(--ink-soft);background:transparent;
+    border:none;border-bottom:2px solid transparent;padding:10px 4px;margin-right:18px;cursor:pointer;
+  }
+  .tabstrip button.active{color:var(--chrome-cobalt);border-bottom-color:var(--chrome-cobalt);}
+
+  button{font-family:inherit;cursor:pointer;}
+  .btn{border:1px solid var(--chrome-line);background:var(--surface);color:var(--ink);padding:9px 15px;border-radius:8px;font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:7px;}
+  .btn:hover{border-color:var(--ink-faint);}
+  .btn-primary{background:var(--chrome-cobalt);border-color:var(--chrome-cobalt);color:#fff;}
+  .btn-primary:hover{background:var(--chrome-cobalt-dark);border-color:var(--chrome-cobalt-dark);}
+  .btn-ghost{border-color:transparent;background:transparent;color:var(--ink-soft);}
+  .btn-ghost:hover{background:var(--surface-sunk);color:var(--ink);}
+  .btn-danger{color:var(--chrome-red);}
+
+  main{max-width:1080px;margin:0 auto;padding:20px 20px 80px;}
+  .card{background:var(--surface);border:1px solid var(--chrome-line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px;}
+  .card h2{font-family:var(--chrome-display);font-weight:600;font-size:17px;margin:0 0 4px;color:var(--ink);}
+  .card .sub{font-family:var(--chrome-body);font-size:12px;color:var(--ink-soft);margin:0 0 16px;}
+  table.grid{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table.grid th{text-align:left;font-family:var(--chrome-body);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--chrome-line);}
+  table.grid td{padding:6px 8px;border-bottom:1px solid var(--surface-sunk);vertical-align:middle;}
+  table.grid tr.total td{font-weight:700;border-top:1px solid var(--chrome-line);border-bottom:none;background:var(--surface-sunk);}
+  table.grid input{
+    width:100%;border:1px solid var(--chrome-line);border-radius:5px;padding:6px 8px;font-family:var(--chrome-body);
+    font-size:13px;color:var(--ink);background:#fbfbfa;font-feature-settings:'tnum' 1;
+  }
+  table.grid input:focus{outline:2px solid var(--chrome-cobalt);outline-offset:1px;border-color:var(--chrome-cobalt);}
+  td.gap-cell{font-family:var(--chrome-body);text-align:right;font-weight:600;font-feature-settings:'tnum' 1;}
+  td.gap-cell.neg{color:var(--chrome-red);}
+  td.gap-cell.pos{color:var(--chrome-green);}
+  .col-label{width:34%;}
+  .col-num{width:18%;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+  .field-row label{display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:4px;font-family:var(--chrome-body);text-transform:uppercase;letter-spacing:.04em;}
+  .field-row input, .field-row textarea, .field-row select{width:100%;border:1px solid var(--chrome-line);border-radius:6px;padding:8px 10px;font-family:var(--chrome-body);font-size:14px;}
+  .hint{font-size:12px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
+  .flag{background:#fff7e6;border:1px solid #f0c96b;border-radius:6px;padding:10px 12px;font-size:12.5px;color:#6b4e00;margin-top:10px;}
+  .actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px;}
+  button.primary{background:var(--chrome-cobalt);color:#fff;border:none;padding:11px 20px;border-radius:6px;font-family:var(--chrome-body);font-weight:600;font-size:13.5px;cursor:pointer;}
+  button.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--chrome-line);padding:11px 20px;border-radius:6px;font-family:var(--chrome-body);font-weight:500;font-size:13.5px;cursor:pointer;}
+
+  /* ---------- audits list ---------- */
+  .audit-row{display:grid;grid-template-columns:2fr 1.4fr 1fr 1fr auto;gap:12px;align-items:center;padding:12px 8px;border-bottom:1px solid var(--surface-sunk);font-size:13.5px;}
+  .audit-row:hover{background:var(--surface-sunk);}
+  .audit-row .co{font-weight:600;}
+  .audit-row .meta{color:var(--ink-soft);font-size:12px;}
+  .empty-state{padding:40px 10px;text-align:center;color:var(--ink-soft);font-size:14px;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+    padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:200;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* ---------- REPORT / PRINT (client-facing brand — unchanged) ---------- */
+  #reportWrap{display:none;}
+  #reportWrap.visible{display:block;}
+  .report-toolbar{display:flex;justify-content:flex-end;gap:10px;margin-bottom:18px;}
+  .sheet{background:#fff;max-width:850px;margin:0 auto 24px;padding:56px 60px;box-shadow:0 1px 4px rgba(0,0,0,.08);position:relative;}
+  .sheet-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--navy);padding-bottom:10px;margin-bottom:26px;}
+  .sheet-header .mark{font-family:var(--font-head);font-weight:700;font-size:13px;color:var(--navy);letter-spacing:.03em;}
+  .sheet-header .co{text-align:right;font-family:var(--font-mono);font-size:11px;color:var(--cobalt);}
+  .sheet-header .co strong{display:block;font-family:var(--font-head);font-size:13px;color:var(--navy);}
+  .cover .title{font-family:var(--font-head);font-weight:700;font-size:34px;color:var(--navy);margin:60px 0 6px;line-height:1.15;}
+  .cover .title span{color:var(--cobalt);}
+  .cover .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:64px;}
+  .cover .meta-grid h4{font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px;}
+  .cover .meta-grid p{margin:0;font-size:14px;}
+  .cover .disclosure{margin-top:56px;font-size:10.5px;line-height:1.6;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;}
+  .cover .footer-date{position:absolute;bottom:56px;left:60px;font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+  .cover .confidential{position:absolute;bottom:56px;right:60px;font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;color:var(--cobalt);font-weight:600;}
+  .toc h3{font-family:var(--font-head);font-size:20px;margin-bottom:20px;color:var(--navy);}
+  .toc ol{list-style:none;margin:0;padding:0;}
+  .toc li{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dotted var(--line);font-size:14px;}
+  .section-title{font-family:var(--font-head);font-weight:600;font-size:17px;color:var(--navy);margin:0 0 4px;}
+  .section-num{font-family:var(--font-mono);font-size:11px;color:var(--cobalt);letter-spacing:.06em;text-transform:uppercase;}
+  table.rpt{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:14px;}
+  table.rpt th{text-align:left;font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:6px 6px;border-bottom:1px solid var(--navy);}
+  table.rpt th.num, table.rpt td.num{text-align:right;}
+  table.rpt td{padding:6px 6px;border-bottom:1px solid #eef1f5;}
+  table.rpt tr.total td{font-weight:700;border-top:1px solid var(--navy);background:#f7f9fc;}
+  .footnote{font-size:9.5px;color:var(--muted);margin-top:18px;font-style:italic;line-height:1.5;}
+  @media print{
+    body{background:#fff;}
+    .authgate, .topbar, .tabstrip, #inputWrap, #ex2Wrap, #auditsWrap, .report-toolbar, .no-print{display:none !important;}
+    #reportWrap{display:block !important;}
+    .sheet{box-shadow:none;margin:0;padding:0.5in 0.65in;page-break-after:always;max-width:none;}
+    .sheet:last-child{page-break-after:auto;}
+    @page{size:letter;margin:0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="authgate" id="authGate">
+  <div class="authcard">
+    <h1 class="display" id="authTitle">Sign in</h1>
+    <p class="sub">Treasury Firepower Audit — for the team only.</p>
+    <label>Email</label>
+    <input type="email" id="authEmail" autocomplete="username">
+    <label>Password</label>
+    <input type="password" id="authPassword" autocomplete="current-password">
+    <button class="btn btn-primary" id="authSubmit">Sign in</button>
+    <div class="err" id="authErr"></div>
+  </div>
+</div>
+
+<div id="mainApp" style="display:none;">
+
+<div class="topbar no-print">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="150 280 185 208" xmlns="http://www.w3.org/2000/svg" width="34" height="34">
+        <polygon fill="#1a4b8c" points="242.74669 285.5804 256.15816 374.10946 327.42649 334.47028"/>
+        <polygon fill="#4a7fc4" points="329.32111 430.70878 329.32111 335.56417 258.07371 383.13647"/>
+        <polygon fill="#002347" points="154.63524 335.56417 154.63524 430.70878 225.88271 383.13647"/>
+        <polygon fill="#0047ab" points="227.7982 374.10946 241.20966 285.5804 156.52986 334.47028"/>
+        <polygon fill="#0047ab" points="227.7982 392.16349 155.13954 432.57591 241.4713 482.4196"/>
+        <polygon fill="#1a4b8c" points="256.15816 392.16349 242.48506 482.4196 328.81682 432.57591"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="display">Treasury Firepower Audit</h1>
+      <p>Interview through client PDF — one place</p>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" id="saveAuditBtn">Save</button>
+    <button class="btn btn-ghost" id="exportBackupBtn">Export backup</button>
+    <button class="btn btn-ghost" id="importBackupBtn">Import backup</button>
+    <input type="file" id="backupInput" accept=".json" style="display:none;">
+    <select id="toolSwitcher" class="btn" style="cursor:pointer;">
+      <option value="">Switch tool…</option>
+      <option value="https://cobaltcommercialcredit.github.io/cobalt-hub/">🏠 Hub</option>
+      <option value="https://cobaltcommercialcredit.github.io/cobalt-prospect-engine/">Cobalt CRE Prospecting</option>
+      <option value="https://cobaltcommercialcredit.github.io/cobalt-debt-deals/">Cobalt Credit Prospecting</option>
+      <option value="https://cobaltcommercialcredit.github.io/cobalt-slb-calculator/">SLB Calculator</option>
+      <option value="https://cobaltcommercialcredit.github.io/cobalt-debt-capacity-calc/">Debt Capacity Calculator</option>
+    </select>
+    <button class="btn btn-ghost signout-btn" id="signOutBtn">Sign out</button>
+  </div>
+</div>
+
+<div class="tabstrip no-print">
+  <button id="navAudits" class="active" onclick="showView('audits')">My Audits</button>
+  <button id="navInput" onclick="showView('input')">Interview Input</button>
+  <button id="navEx2" onclick="showView('ex2')">Exhibit 2 — Financial Model</button>
+  <button id="navReport" onclick="showView('report')">Generate Report</button>
+</div>
+
+<main>
+  <div id="auditsWrap">
+    <div id="draftBanner" style="display:none;align-items:center;justify-content:space-between;gap:16px;background:#fff7e6;border:1px solid #f0c96b;border-radius:10px;padding:14px 18px;margin-bottom:16px;font-size:13.5px;color:#6b4e00;"></div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <div>
+          <h2>My Audits</h2>
+          <p class="sub" style="margin-bottom:0;">Shared across the team — everyone sees everyone's saved audits</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="ghost" onclick="fetchAndRenderAudits()">Refresh</button>
+          <button class="primary" onclick="newAudit()">+ New Audit</button>
+        </div>
+      </div>
+      <input type="text" id="auditsSearch" placeholder="Search by company, contact, or preparer…" style="width:100%;margin-top:14px;padding:9px 12px;border:1px solid var(--chrome-line);border-radius:8px;font-family:inherit;font-size:13.5px;" oninput="renderAuditsList(this.value)">
+      <div id="auditsList" style="margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <div id="inputWrap" style="display:none;">
+
+    <div class="card">
+      <h2>Cover Details</h2>
+      <p class="sub">Section 0 — Report Header</p>
+      <div class="field-row">
+        <div><label>Prepared For (Contact Name)</label><input id="c_name" placeholder="Mr John Doe"></div>
+        <div><label>Company / Descriptor</label><input id="c_company" placeholder="XYZ Company Owner"></div>
+      </div>
+      <div class="field-row">
+        <div><label>Prepared By</label><input id="c_by" value="Armen Grigorian"></div>
+        <div><label>Report Date</label><input id="c_date" type="date"></div>
+      </div>
+    </div>
+
+    <div class="card" id="sec-1"></div>
+    <div class="card" id="sec-2"></div>
+    <div class="card" id="sec-3"></div>
+    <div class="card" id="sec-4"></div>
+    <div class="card" id="sec-5"></div>
+    <div class="card" id="sec-6"></div>
+    <div class="card" id="sec-8"></div>
+    <div class="card" id="sec-7"></div>
+    <div class="card" id="sec-9"></div>
+    <div class="card" id="sec-10"></div>
+    <div class="card" id="sec-11"></div>
+    <div class="card" id="sec-12"></div>
+
+    <div class="actions">
+      <button class="ghost" onclick="resetAll()">Clear All Inputs</button>
+      <button class="primary" onclick="showView('report')">Generate Report →</button>
+    </div>
+  </div>
+
+  <div id="ex2Wrap" style="display:none;">
+    <div class="card">
+      <h2>Exhibit 2 — Business Financial Analysis Integration</h2>
+      <p class="sub">Historical Year 0 base + 3-year projection</p>
+      <p class="hint">Revenue, COGS, OpEx, AR/Inv/AP balances for Year 0 are pulled from Section 12. Debt tranches and rates for Year 0 are pulled from Sections 2 and 3. Everything else here is new — fill in the fields below once, they carry through the whole projection.</p>
+    </div>
+    <div class="card" id="ex2-global"></div>
+    <div class="card" id="ex2-y0"></div>
+    <div class="card" id="ex2-assumptions"></div>
+    <div class="card" id="ex2-is"></div>
+    <div class="card" id="ex2-wc"></div>
+    <div class="card" id="ex2-debt"></div>
+    <div class="card" id="ex2-cf"></div>
+    <div class="card" id="ex2-bs"></div>
+  </div>
+
+  <div id="reportWrap">
+    <div class="report-toolbar no-print">
+      <button class="ghost" onclick="showView('input')">← Back to Input</button>
+      <button class="primary" onclick="window.print()">Download / Print PDF</button>
+    </div>
+    <div id="reportBody"></div>
+  </div>
+
+</main>
+
+</div><!-- /mainApp -->
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+/* ============================================================
+   DATA MODEL
+   ============================================================ */
+const S1_ITEMS = [['cash','Cash'],['ar','Accounts Receivable'],['inv','Inventories'],['notesRec','Notes Receivable'],
+  ['property','Property'],['equipment','Equipment'],['goodwill','Goodwill'],['otherIntangibles','Other Intangibles']];
+const S23_ITEMS = [['ap','Accounts Payable'],['cc','Corporate Credit Cards'],['loc','Line of Credit'],
+  ['wcRevolver','Working Capital Revolver'],['termDebt','Term Debt'],['subDebt','Subordinated Debt'],
+  ['shareholderLoans','Shareholder Loans']];
+const S5_ITEMS = [['dailyBank','Daily Bank Balance in Place or Required'],['wc90','90-Day Forecasted Working Capital Change'],
+  ['capex90','90-Day Forecasted CapEx, Investments, etc'],['capex90_180','90-180 Day Forecasted CapEx, Investments, etc'],
+  ['capex180_365','180-365 Day Forecasted CapEx, Investments, etc']];
+const S68_ITEMS = [['operating','Operating Bank Account'],['tier7_14','7-14 Day Invested Cash Positions, Money Market'],
+  ['tier60_90','60-90 Day Invested Cash Positions, Ultra-Short Duration'],
+  ['tier90_180','90-180 Day Invested Cash Positions, Short Duration'],
+  ['tier180_365','180-365 Day Invested Cash Positions, Short Term']];
+
+const S10_ASSET_ITEMS = [
+  ['cash','Cash'],['arNet','Accounts Receivable, net'],['inv','Inventories'],['otherCA','Other Current Assets, incl. prepaids']
+];
+const S10_FIXED_ITEMS = [
+  ['property','Property','propertyDep','Less: Property Depreciation'],
+  ['equipment','Plant & Equipment','equipmentDep','Less: Equipment Depreciation'],
+  ['vehicles','Vehicles','vehiclesDep','Less: Vehicle Depreciation'],
+];
+const S10_OTHER_ASSET_ITEMS = [['ltInvest','Long-Term Investments'],['otherAssets','Other Assets']];
+const S10_CL_ITEMS = [['ap','Accounts Payable'],['accrued','Accrued Wages and Other Liabilities'],['cc','Credit Cards, etc'],
+  ['revolver','Revolver'],['loc','Line of Credit'],['curLTD','Current Portion of Long-Term Debt'],
+  ['otherCL','Other Current Liabilities']];
+const S10_LTL_ITEMS = [['seniorTerm','Senior Term Debt'],['subInst','Subordinated Institutional Debt'],
+  ['subOther','Subordinated Other Debt'],['shareholderLoans','Shareholder Loans'],['otherLTD','Other Long-Term Debt']];
+const S10_EQUITY_ITEMS = [['contribEquity','Contributed Equity'],['contribInst','Contributed Institutional Equity'],
+  ['founderEquity','Founder Equity, incl. contributed, retained, current profits'],['otherEquity','Other']];
+
+let D = {}; // main data store, populated by initData()
+
+function initData(){
+  D = {cover:{}, s1:{}, s2:{}, s3:{}, s5:{}, s6:{}, s8:{}, s10:{}, s11:{}, s12:{}};
+  S1_ITEMS.forEach(([k])=> D.s1[k] = {cur:'', tgt:''});
+  S23_ITEMS.forEach(([k])=> { D.s2[k] = {cur:'', tgt:''}; D.s3[k] = {cur:'', tgt:''}; });
+  S5_ITEMS.forEach(([k])=> D.s5[k] = {cur:'', tgt:''});
+  S68_ITEMS.forEach(([k])=> { D.s6[k] = {cur:'', tgt:''}; D.s8[k] = {cur:'', tgt:''}; });
+  const s10keys = [...S10_ASSET_ITEMS.map(i=>i[0])];
+  S10_FIXED_ITEMS.forEach(f=>{ s10keys.push(f[0]); s10keys.push(f[2]); });
+  S10_OTHER_ASSET_ITEMS.forEach(i=>s10keys.push(i[0]));
+  S10_CL_ITEMS.forEach(i=>s10keys.push(i[0]));
+  S10_LTL_ITEMS.forEach(i=>s10keys.push(i[0]));
+  S10_EQUITY_ITEMS.forEach(i=>s10keys.push(i[0]));
+  s10keys.forEach(k=> D.s10[k] = {cur:'', adjP:'', adjM:''});
+  D.s11 = {ebitda:'', seniorDebtService:'', totalDebtService:'', slbRentCur:'', slbRentPot:'', useExhibit2:true};
+  D.s12 = {revenue:'', cogs:'', opex:'', arBal:'', invBal:'', apBal:''};
+  D.ex2 = {
+    cashY0:'', ppeGrossY0:'', accumDepY0:'', otherCAY0:'', otherAssetsY0:'', otherCLY0:'', existingDA:'',
+    taxRate:'21', depLife:'7', rateScenario:'cur',
+    revGrowth:['','',''], cogsPct:['','',''], opexPct:['','',''],
+    arDays:['','',''], invDays:['','',''], apDays:['','',''],
+    capex:['','',''], termAmort:['','',''], dividends:['','',''],
+    minCash:['','',''], revolverLimit:['','','']
+  };
+}
+initData();
+
+function n(v){ const f = parseFloat(v); return isNaN(f) ? 0 : f; }
+function fmt(v, opts={}){
+  const val = n(v);
+  if(opts.pct) return (val*100).toFixed(opts.dp!==undefined?opts.dp:2)+'%';
+  const dp = opts.dp!==undefined ? opts.dp : 0;
+  return val.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+}
+function fmtMoney(v){ const val=n(v); const s = Math.abs(val).toLocaleString('en-US',{maximumFractionDigits:0}); return (val<0?'-$':'$')+s; }
+function gapClass(v){ const val=n(v); return val<0?'neg':(val>0?'pos':''); }
+
+/* ============================================================
+   INPUT FORM RENDERING
+   ============================================================ */
+function inputRow(items, store, isRate){
+  return items.map(([key,label])=>{
+    const gap = n(store[key].cur) - n(store[key].tgt);
+    return `<tr>
+      <td class="col-label">${label}</td>
+      <td class="col-num"><input type="number" step="any" data-store="${storeName(store)}" data-key="${key}" data-field="cur" value="${store[key].cur}" oninput="onInput(this)"></td>
+      <td class="col-num"><input type="number" step="any" data-store="${storeName(store)}" data-key="${key}" data-field="tgt" value="${store[key].tgt}" oninput="onInput(this)"></td>
+      <td class="gap-cell ${gapClass(gap)}">${isRate ? fmt(gap,{pct:true,dp:2}) : fmtMoney(gap)}</td>
+    </tr>`;
+  }).join('');
+}
+// map store object back to its D.sX key for the oninput handler
+const storeNameMap = new Map();
+function registerStore(name, obj){ storeNameMap.set(obj, name); return obj; }
+function storeName(obj){ return storeNameMap.get(obj); }
+registerStore('s1', D.s1); registerStore('s2', D.s2); registerStore('s3', D.s3);
+registerStore('s5', D.s5); registerStore('s6', D.s6); registerStore('s8', D.s8);
+registerStore('s10', D.s10);
+
+function onInput(el){
+  const store = D[el.dataset.store];
+  store[el.dataset.key][el.dataset.field] = el.value;
+  renderInputSections(); // re-render to update gap columns live
+  // restore focus after re-render
+  requestAnimationFrame(()=>{
+    const sel = `input[data-store="${el.dataset.store}"][data-key="${el.dataset.key}"][data-field="${el.dataset.field}"]`;
+    const target = document.querySelector(sel);
+    if(target){ target.focus(); const v=target.value; target.value=''; target.value=v; }
+  });
+}
+
+/* ============================================================
+   UNSAVED-CHANGES TRACKING, LOCAL DRAFT BACKUP, AUTOSAVE
+   ============================================================ */
+let draftSaveTimer = null;
+document.addEventListener('input', function(e){
+  if(e.target.closest('#inputWrap') || e.target.closest('#ex2Wrap')){ markDirty(); }
+});
+document.addEventListener('change', function(e){
+  if(e.target.closest('#inputWrap') || e.target.closest('#ex2Wrap')){ markDirty(); }
+});
+function markDirty(){
+  D._dirty = true;
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(writeLocalDraft, 1500);
+}
+function writeLocalDraft(){
+  try{
+    localStorage.setItem('ta_draft', JSON.stringify({
+      auditId: D._auditId, data: serializeD(), savedAt: Date.now(),
+      company: D.cover.company||'', name: D.cover.name||''
+    }));
+  }catch(e){}
+}
+function clearLocalDraft(){ try{ localStorage.removeItem('ta_draft'); }catch(e){} }
+window.addEventListener('beforeunload', function(e){
+  if(D._dirty){ e.preventDefault(); e.returnValue = ''; return ''; }
+});
+function checkForDraft(){
+  var raw;
+  try{ raw = localStorage.getItem('ta_draft'); }catch(e){ return; }
+  if(!raw) return;
+  var draft;
+  try{ draft = JSON.parse(raw); }catch(e){ return; }
+  if(!draft || !draft.data) return;
+  var who = draft.company || draft.name || '(untitled)';
+  var when = new Date(draft.savedAt).toLocaleString();
+  var banner = document.getElementById('draftBanner');
+  banner.style.display = 'flex';
+  banner.innerHTML = `
+    <div>Unsaved draft found for <strong>${escapeHTML(who)}</strong> — last changed ${when}, never saved.</div>
+    <div style="display:flex;gap:8px;">
+      <button class="ghost" onclick="discardDraft()">Discard</button>
+      <button class="primary" onclick="restoreDraft()">Restore Draft</button>
+    </div>`;
+}
+function restoreDraft(){
+  var raw = localStorage.getItem('ta_draft');
+  if(!raw) return;
+  var draft = JSON.parse(raw);
+  applyLoadedData(draft.data);
+  D._auditId = draft.auditId || null;
+  D._dirty = true;
+  document.getElementById('draftBanner').style.display = 'none';
+  renderInputSections();
+  showView('input');
+  toast('Draft restored — remember to Save');
+}
+function discardDraft(){
+  clearLocalDraft();
+  document.getElementById('draftBanner').style.display = 'none';
+}
+
+function totalRow(items, store, isRate, label){
+  let curT=0,tgtT=0;
+  items.forEach(([k])=>{ curT+=n(store[k].cur); tgtT+=n(store[k].tgt); });
+  const gap = curT - tgtT;
+  return {curT,tgtT,gap,row:`<tr class="total"><td>${label}</td><td class="col-num">${isRate?fmt(curT,{pct:true,dp:2}):fmtMoney(curT)}</td><td class="col-num">${isRate?fmt(tgtT,{pct:true,dp:2}):fmtMoney(tgtT)}</td><td class="gap-cell ${gapClass(gap)}">${isRate?fmt(gap,{pct:true,dp:2}):fmtMoney(gap)}</td></tr>`};
+}
+
+function s10Row(key,label,store){
+  const row = store[key];
+  const potential = n(row.cur) + n(row.adjP) - n(row.adjM);
+  return {potential, html:`<tr>
+    <td class="col-label">${label}</td>
+    <td class="col-num"><input type="number" step="any" data-store="s10" data-key="${key}" data-field="cur" value="${row.cur}" oninput="onInput(this)"></td>
+    <td class="col-num"><input type="number" step="any" data-store="s10" data-key="${key}" data-field="adjP" value="${row.adjP}" oninput="onInput(this)"></td>
+    <td class="col-num"><input type="number" step="any" data-store="s10" data-key="${key}" data-field="adjM" value="${row.adjM}" oninput="onInput(this)"></td>
+    <td class="gap-cell">${fmtMoney(potential)}</td>
+  </tr>`};
+}
+
+function renderInputSections(){
+  // Section 1
+  document.getElementById('sec-1').innerHTML = `
+    <h2>Section 1 — Asset Dynamics</h2><p class="sub">Current vs. target asset position</p>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current</th><th class="col-num">Target</th><th class="col-num">Gap</th></tr>
+    ${inputRow(S1_ITEMS, D.s1)}${totalRow(S1_ITEMS, D.s1, false, 'Total Asset Dynamics').row}</table>`;
+  // Section 2
+  document.getElementById('sec-2').innerHTML = `
+    <h2>Section 2 — Liability Dynamics</h2><p class="sub">Current vs. target liability balances</p>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current</th><th class="col-num">Target</th><th class="col-num">Gap</th></tr>
+    ${inputRow(S23_ITEMS, D.s2)}${totalRow(S23_ITEMS, D.s2, false, 'Total Liability Dynamics').row}</table>`;
+  // Section 3
+  document.getElementById('sec-3').innerHTML = `
+    <h2>Section 3 — Liability Cost Factors</h2><p class="sub">Current vs. target all-in rate, by instrument</p>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current Rate</th><th class="col-num">Target Rate</th><th class="col-num">Gap</th></tr>
+    ${inputRow(S23_ITEMS, D.s3, true)}${totalRow(S23_ITEMS, D.s3, true, 'Total (Sum of Rates)').row}</table>
+    <p class="hint">Note: this total sums individual rates as the source model does — it is not a blended/weighted cost of capital.</p>`;
+  // Section 4 (derived, read-only preview)
+  const s4 = calcSection4();
+  document.getElementById('sec-4').innerHTML = `
+    <h2>Section 4 — Debt Cost Optimization Projection <span style="font-weight:400;color:var(--muted);font-size:12px;">(auto-calculated: Section 2 × Section 3)</span></h2>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current Cost</th><th class="col-num">Target Cost</th><th class="col-num">Gap</th></tr>
+    ${s4.rows}${'<tr class="total"><td>Total Annual Interest Cost</td><td class="col-num">'+fmtMoney(s4.curT)+'</td><td class="col-num">'+fmtMoney(s4.tgtT)+'</td><td class="gap-cell '+gapClass(s4.gap)+'">'+fmtMoney(s4.gap)+'</td></tr>'}</table>`;
+  // Section 5
+  document.getElementById('sec-5').innerHTML = `
+    <h2>Section 5 — Liquidity Requirements Dynamics</h2><p class="sub">Current vs. target liquidity needs</p>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current</th><th class="col-num">Target</th><th class="col-num">Gap</th></tr>
+    ${inputRow(S5_ITEMS, D.s5)}${totalRow(S5_ITEMS, D.s5, false, 'Total Liquidity Requirements').row}</table>`;
+  // Section 6
+  document.getElementById('sec-6').innerHTML = `
+    <h2>Section 6 — Yield Optimization Assumption</h2><p class="sub">Assumed yield by cash tier</p>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current Rate</th><th class="col-num">Target Rate</th><th class="col-num">Gap</th></tr>
+    ${inputRow(S68_ITEMS, D.s6, true)}</table>`;
+  // Section 8
+  document.getElementById('sec-8').innerHTML = `
+    <h2>Section 8 — Tiered Cash Structures</h2><p class="sub">Balance placed in each cash tier</p>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current</th><th class="col-num">Target</th><th class="col-num">Gap</th></tr>
+    ${inputRow(S68_ITEMS, D.s8)}${totalRow(S68_ITEMS, D.s8, false, 'Total Cash Structures').row}</table>`;
+  // Section 7 (derived — corrected formula, see note)
+  const s7 = calcSection7();
+  document.getElementById('sec-7').innerHTML = `
+    <h2>Section 7 — Yield Optimization Weighting <span style="font-weight:400;color:var(--muted);font-size:12px;">(auto-calculated)</span></h2>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current</th><th class="col-num">Target</th><th class="col-num">Gap</th></tr>
+    ${s7.rows}${'<tr class="total"><td>Total Weighted Yield</td><td class="col-num">'+fmt(s7.curT,{pct:true,dp:3})+'</td><td class="col-num">'+fmt(s7.tgtT,{pct:true,dp:3})+'</td><td class="gap-cell '+gapClass(s7.gap)+'">'+fmt(s7.gap,{pct:true,dp:3})+'</td></tr>'}</table>`;
+  // Section 9 (derived)
+  const s9 = calcSection9();
+  document.getElementById('sec-9').innerHTML = `
+    <h2>Section 9 — Yield Optimization Projection <span style="font-weight:400;color:var(--muted);font-size:12px;">(auto-calculated: Section 8 × Section 6)</span></h2>
+    <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current Income</th><th class="col-num">Target Income</th><th class="col-num">Gap</th></tr>
+    ${s9.rows}${'<tr class="total"><td>Total Annual Yield Income</td><td class="col-num">'+fmtMoney(s9.curT)+'</td><td class="col-num">'+fmtMoney(s9.tgtT)+'</td><td class="gap-cell '+gapClass(s9.gap)+'">'+fmtMoney(s9.gap)+'</td></tr>'}</table>`;
+  // Section 10
+  renderSection10();
+  // Section 11
+  renderSection11();
+  // Section 12
+  renderSection12();
+}
+
+function renderSection10(){
+  let html = `<h2>Section 10 — Capital Structure Review</h2><p class="sub">Current balance sheet with modeled adjustments</p>
+  <table class="grid"><tr><th class="col-label">Line Item</th><th class="col-num">Current</th><th class="col-num">Adj. (+)</th><th class="col-num">Adj. (−)</th><th class="col-num">Potential</th></tr>
+  <tr><td colspan="5" style="font-weight:600;padding-top:12px;color:var(--muted);">Current Assets</td></tr>`;
+  let caCur=0, caPot=0;
+  S10_ASSET_ITEMS.forEach(([k,label])=>{ const r=s10Row(k,label,D.s10); html+=r.html; caCur+=n(D.s10[k].cur); caPot+=r.potential; });
+  html += `<tr class="total"><td>Total Current Assets</td><td class="col-num">${fmtMoney(caCur)}</td><td></td><td></td><td class="col-num">${fmtMoney(caPot)}</td></tr>`;
+  html += `<tr><td colspan="5" style="font-weight:600;padding-top:12px;color:var(--muted);">Fixed & Other Assets</td></tr>`;
+  let faCur=0, faPot=0;
+  S10_FIXED_ITEMS.forEach(([gk,glabel,dk,dlabel])=>{
+    const grossCur=n(D.s10[gk].cur), depCur=n(D.s10[dk].cur);
+    const grossPot=grossCur+n(D.s10[gk].adjP)-n(D.s10[gk].adjM);
+    const depPot=depCur+n(D.s10[dk].adjP)-n(D.s10[dk].adjM);
+    html += s10Row(gk, glabel, D.s10).html;
+    html += s10Row(dk, dlabel+' (subtract)', D.s10).html;
+    const netCur = grossCur-depCur, netPot = grossPot-depPot;
+    html += `<tr style="background:#f7f9fc;"><td style="font-style:italic;">${glabel} (net of depreciation)</td><td class="col-num">${fmtMoney(netCur)}</td><td></td><td></td><td class="col-num">${fmtMoney(netPot)}</td></tr>`;
+    faCur += netCur; faPot += netPot;
+  });
+  S10_OTHER_ASSET_ITEMS.forEach(([k,label])=>{ const r=s10Row(k,label,D.s10); html+=r.html; faCur+=n(D.s10[k].cur); faPot+=r.potential; });
+  const totalAssetsCur = caCur+faCur, totalAssetsPot = caPot+faPot;
+  html += `<tr class="total"><td>Total Assets</td><td class="col-num">${fmtMoney(totalAssetsCur)}</td><td></td><td></td><td class="col-num">${fmtMoney(totalAssetsPot)}</td></tr>`;
+  html += `<tr><td colspan="5" style="font-weight:600;padding-top:12px;color:var(--muted);">Current Liabilities</td></tr>`;
+  let clCur=0, clPot=0;
+  S10_CL_ITEMS.forEach(([k,label])=>{ const r=s10Row(k,label,D.s10); html+=r.html; clCur+=n(D.s10[k].cur); clPot+=r.potential; });
+  html += `<tr class="total"><td>Total Current Liabilities</td><td class="col-num">${fmtMoney(clCur)}</td><td></td><td></td><td class="col-num">${fmtMoney(clPot)}</td></tr>`;
+  html += `<tr><td colspan="5" style="font-weight:600;padding-top:12px;color:var(--muted);">Long-Term Liabilities</td></tr>`;
+  let ltlCur=0, ltlPot=0;
+  S10_LTL_ITEMS.forEach(([k,label])=>{ const r=s10Row(k,label,D.s10); html+=r.html; ltlCur+=n(D.s10[k].cur); ltlPot+=r.potential; });
+  html += `<tr class="total"><td>Total Long-Term Liabilities</td><td class="col-num">${fmtMoney(ltlCur)}</td><td></td><td></td><td class="col-num">${fmtMoney(ltlPot)}</td></tr>`;
+  const totalLiabCur = clCur+ltlCur, totalLiabPot = clPot+ltlPot;
+  html += `<tr class="total"><td>Total Liabilities</td><td class="col-num">${fmtMoney(totalLiabCur)}</td><td></td><td></td><td class="col-num">${fmtMoney(totalLiabPot)}</td></tr>`;
+  html += `<tr><td colspan="5" style="font-weight:600;padding-top:12px;color:var(--muted);">Equity</td></tr>`;
+  let eqCur=0, eqPot=0;
+  S10_EQUITY_ITEMS.forEach(([k,label])=>{ const r=s10Row(k,label,D.s10); html+=r.html; eqCur+=n(D.s10[k].cur); eqPot+=r.potential; });
+  html += `<tr class="total"><td>Total Equity</td><td class="col-num">${fmtMoney(eqCur)}</td><td></td><td></td><td class="col-num">${fmtMoney(eqPot)}</td></tr>`;
+  html += `</table>`;
+  document.getElementById('sec-10').innerHTML = html;
+  // stash for section 11 use
+  D._s10calc = {caCur,caPot,faCur,faPot,totalAssetsCur,totalAssetsPot,clCur,clPot,ltlCur,ltlPot,totalLiabCur,totalLiabPot,eqCur,eqPot};
+}
+
+function renderSection11(){
+  const c = D.s10._cash || 0;
+  const s10 = D._s10calc || {};
+  const ex2yrs = calcExhibit2();
+  const ex2y0 = ex2yrs[0], ex2y1 = ex2yrs[1];
+  if(D.s11.useExhibit2){ D.s11.ebitda = ex2y0.ebitda; } // keep the visible field in sync immediately; calcSection11() re-syncs independently for any caller that skips this view
+  const y1DebtService = ex2y1.termAmort + ex2y1.interestExpense;
+  document.getElementById('sec-11').innerHTML = `
+  <h2>Section 11 — Capital Structure Ratios</h2>
+  <p class="sub">SLB rent isn't modeled in Exhibit 2 — enter directly. Potential mirrors Current for EBITDA/Debt Service unless the deal changes leverage.</p>
+  <div class="field-row" style="align-items:flex-end;">
+    <div>
+      <label>EBITDA (Current)</label>
+      <input type="number" step="any" value="${fmt(D.s11.ebitda,{dp:0})}" ${D.s11.useExhibit2?'disabled':''} oninput="D.s11.ebitda=this.value;renderInputSections()" style="${D.s11.useExhibit2?'background:var(--surface-sunk);color:var(--ink-soft);':''}">
+    </div>
+    <div style="padding-bottom:8px;">
+      <label style="display:flex;align-items:center;gap:6px;text-transform:none;font-size:12.5px;">
+        <input type="checkbox" ${D.s11.useExhibit2?'checked':''} onchange="D.s11.useExhibit2=this.checked;renderInputSections()" style="width:auto;">
+        Sync from Exhibit 2 Year 0 (recommended)
+      </label>
+    </div>
+  </div>
+  <div class="field-row">
+    <div><label>Senior Debt Service (Current, annual)</label><input type="number" step="any" value="${D.s11.seniorDebtService}" oninput="D.s11.seniorDebtService=this.value;renderInputSections()"></div>
+    <div><label>Total Debt Service (Current, annual)</label><input type="number" step="any" value="${D.s11.totalDebtService}" oninput="D.s11.totalDebtService=this.value;renderInputSections()"></div>
+  </div>
+  <p class="hint">Reference — Exhibit 2 Year 1 models ${fmtMoney(ex2y1.termAmort)} term amortization + ${fmtMoney(ex2y1.interestExpense)} interest = ${fmtMoney(y1DebtService)} total debt service. Not auto-filled, since "Current" debt service depends on the actual contractual amortization schedule, which Exhibit 2 doesn't capture — check this figure against the real schedule before typing it in.</p>
+  <div class="field-row">
+    <div><label>SLB Rent (Current, annual)</label><input type="number" step="any" value="${D.s11.slbRentCur}" oninput="D.s11.slbRentCur=this.value;renderInputSections()"></div>
+    <div><label>SLB Rent (Potential, annual)</label><input type="number" step="any" value="${D.s11.slbRentPot}" oninput="D.s11.slbRentPot=this.value;renderInputSections()"></div>
+  </div>
+  ${renderS11Table()}
+  `;
+}
+
+function renderS11Table(){
+  const r = calcSection11();
+  const rows = [
+    ['Current Ratio', r.currentRatioCur, r.currentRatioPot, 'x'],
+    ['Quick Ratio', r.quickRatioCur, r.quickRatioPot, 'x'],
+    ['Senior Debt / EBITDA', r.seniorDebtEbitdaCur, r.seniorDebtEbitdaPot, 'x'],
+    ['Total Debt / EBITDA', r.totalDebtEbitdaCur, r.totalDebtEbitdaPot, 'x'],
+    ['Return on Assets', r.roaCur, r.roaPot, '%'],
+    ['Return on Equity', r.roeCur, r.roePot, '%'],
+    ['Senior DSCR', r.seniorDscrCur, r.seniorDscrPot, 'x'],
+    ['Total DSCR', r.totalDscrCur, r.totalDscrPot, 'x'],
+    ['SLB Rent FCCR', r.slbFccrCur, r.slbFccrPot, 'x'],
+    ['Senior Debt Service + SLB Rent FCCR', r.seniorSlbFccrCur, r.seniorSlbFccrPot, 'x'],
+    ['Total Debt Service + SLB Rent FCCR', r.totalSlbFccrCur, r.totalSlbFccrPot, 'x'],
+  ];
+  const fmtRatio = (v,type)=> type==='%' ? fmt(v,{pct:true,dp:1}) : (isFinite(v)? v.toFixed(2)+'x' : '—');
+  return `<table class="grid" style="margin-top:16px;"><tr><th class="col-label">Ratio</th><th class="col-num">Current</th><th class="col-num">Potential</th></tr>
+  ${rows.map(([label,cur,pot,type])=>`<tr><td class="col-label">${label}</td><td class="gap-cell">${fmtRatio(cur,type)}</td><td class="gap-cell">${fmtRatio(pot,type)}</td></tr>`).join('')}
+  </table>`;
+}
+
+function renderSection12(){
+  const r = calcSection12();
+  document.getElementById('sec-12').innerHTML = `
+  <h2>Section 12 — Cash Conversion Cycle Analysis</h2>
+  <p class="sub">Inputs from financials / interview</p>
+  <div class="field-row">
+    <div><label>Annual Revenue</label><input type="number" step="any" value="${D.s12.revenue}" oninput="D.s12.revenue=this.value;renderInputSections()"></div>
+    <div><label>Annual CoGS</label><input type="number" step="any" value="${D.s12.cogs}" oninput="D.s12.cogs=this.value;renderInputSections()"></div>
+  </div>
+  <div class="field-row">
+    <div><label>Annual Operating Expenses</label><input type="number" step="any" value="${D.s12.opex}" oninput="D.s12.opex=this.value;renderInputSections()"></div>
+    <div><label>Accounts Receivable Balance</label><input type="number" step="any" value="${D.s12.arBal}" oninput="D.s12.arBal=this.value;renderInputSections()"></div>
+  </div>
+  <div class="field-row">
+    <div><label>Inventory Balance</label><input type="number" step="any" value="${D.s12.invBal}" oninput="D.s12.invBal=this.value;renderInputSections()"></div>
+    <div><label>Accounts Payable Balance</label><input type="number" step="any" value="${D.s12.apBal}" oninput="D.s12.apBal=this.value;renderInputSections()"></div>
+  </div>
+  <table class="grid" style="margin-top:16px;">
+    <tr><td class="col-label">AR Days</td><td class="gap-cell">${r.arDays.toFixed(1)}</td></tr>
+    <tr><td class="col-label">Inventory Days</td><td class="gap-cell">${r.invDays.toFixed(1)}</td></tr>
+    <tr><td class="col-label">AP Days</td><td class="gap-cell">${r.apDays.toFixed(1)}</td></tr>
+    <tr class="total"><td>Cash Conversion Cycle (Days)</td><td class="gap-cell">${r.ccc.toFixed(1)}</td></tr>
+    <tr><td class="col-label">Daily Operating Cost</td><td class="gap-cell">${fmtMoney(r.dailyOpCost)}</td></tr>
+    <tr class="total"><td>Implied Operating Cash Need</td><td class="gap-cell">${fmtMoney(r.impliedCashNeed)}</td></tr>
+    <tr><td class="col-label">Current Operating Account Balance (from Section 8)</td><td class="gap-cell">${fmtMoney(r.currentOpBalance)}</td></tr>
+    <tr class="total"><td>Operating Cash Gap vs. Current Balance</td><td class="gap-cell ${gapClass(r.gap)}">${fmtMoney(r.gap)}</td></tr>
+  </table>`;
+}
+
+/* ============================================================
+   DERIVED CALCULATIONS
+   ============================================================ */
+function calcSection4(){
+  let curT=0,tgtT=0,rows='';
+  S23_ITEMS.forEach(([k,label])=>{
+    const cur = n(D.s2[k].cur)*n(D.s3[k].cur);
+    const tgt = n(D.s2[k].tgt)*n(D.s3[k].tgt);
+    const gap = cur-tgt;
+    curT+=cur; tgtT+=tgt;
+    rows += `<tr><td class="col-label">${label}</td><td class="col-num">${fmtMoney(cur)}</td><td class="col-num">${fmtMoney(tgt)}</td><td class="gap-cell ${gapClass(gap)}">${fmtMoney(gap)}</td></tr>`;
+  });
+  return {rows, curT, tgtT, gap: curT-tgtT};
+}
+function calcSection7(){
+  let curT=0,tgtT=0,rows='';
+  S68_ITEMS.forEach(([k,label])=>{
+    const totalCashCur = S68_ITEMS.reduce((s,[kk])=>s+n(D.s8[kk].cur),0);
+    const totalCashTgt = S68_ITEMS.reduce((s,[kk])=>s+n(D.s8[kk].tgt),0);
+    const cur = totalCashCur ? (n(D.s8[k].cur)/totalCashCur)*n(D.s6[k].cur) : 0;
+    const tgt = totalCashTgt ? (n(D.s8[k].tgt)/totalCashTgt)*n(D.s6[k].tgt) : 0;
+    const gap = tgt-cur;
+    curT+=cur; tgtT+=tgt;
+    rows += `<tr><td class="col-label">${label}</td><td class="col-num">${fmt(cur,{pct:true,dp:3})}</td><td class="col-num">${fmt(tgt,{pct:true,dp:3})}</td><td class="gap-cell ${gapClass(gap)}">${fmt(gap,{pct:true,dp:3})}</td></tr>`;
+  });
+  return {rows, curT, tgtT, gap: tgtT-curT};
+}
+function calcSection9(){
+  let curT=0,tgtT=0,rows='';
+  S68_ITEMS.forEach(([k,label])=>{
+    const cur = n(D.s8[k].cur)*n(D.s6[k].cur);
+    const tgt = n(D.s8[k].tgt)*n(D.s6[k].tgt);
+    const gap = cur-tgt;
+    curT+=cur; tgtT+=tgt;
+    rows += `<tr><td class="col-label">${label}</td><td class="col-num">${fmtMoney(cur)}</td><td class="col-num">${fmtMoney(tgt)}</td><td class="gap-cell ${gapClass(gap)}">${fmtMoney(gap)}</td></tr>`;
+  });
+  return {rows, curT, tgtT, gap: curT-tgtT};
+}
+function calcSection11(){
+  if(D.s11.useExhibit2){ D.s11.ebitda = calcExhibit2()[0].ebitda; }
+  const s10 = D._s10calc || {caCur:0,caPot:0,clCur:0,clPot:0,totalAssetsCur:0,totalAssetsPot:0,eqCur:0,eqPot:0};
+  const cashCur = n(D.s10.cash.cur), arCur = n(D.s10.arNet.cur);
+  const cashPot = cashCur+n(D.s10.cash.adjP)-n(D.s10.cash.adjM);
+  const arPot = arCur+n(D.s10.arNet.adjP)-n(D.s10.arNet.adjM);
+  const ebitda = n(D.s11.ebitda);
+  const seniorDS = n(D.s11.seniorDebtService);
+  const totalDS = n(D.s11.totalDebtService);
+  const slbCur = n(D.s11.slbRentCur), slbPot = n(D.s11.slbRentPot);
+  const seniorLTDCur = n(D.s10.seniorTerm.cur), curLTDcur = n(D.s10.curLTD.cur);
+  const seniorLTDPot = seniorLTDCur+n(D.s10.seniorTerm.adjP)-n(D.s10.seniorTerm.adjM);
+  const curLTDpot = curLTDcur+n(D.s10.curLTD.adjP)-n(D.s10.curLTD.adjM);
+  const totalDebtItemsCur = ['revolver','loc','curLTD','seniorTerm','subInst','subOther'].reduce((s,k)=>s+n(D.s10[k].cur),0);
+  const totalDebtItemsPot = ['revolver','loc','curLTD','seniorTerm','subInst','subOther'].reduce((s,k)=>s+(n(D.s10[k].cur)+n(D.s10[k].adjP)-n(D.s10[k].adjM)),0);
+  const safeDiv = (a,b)=> b ? a/b : NaN;
+  return {
+    currentRatioCur: safeDiv(s10.caCur, s10.clCur), currentRatioPot: safeDiv(s10.caPot, s10.clPot),
+    quickRatioCur: safeDiv(cashCur+arCur, s10.clCur), quickRatioPot: safeDiv(cashPot+arPot, s10.clPot),
+    seniorDebtEbitdaCur: safeDiv(curLTDcur+seniorLTDCur, ebitda), seniorDebtEbitdaPot: safeDiv(curLTDpot+seniorLTDPot, ebitda),
+    totalDebtEbitdaCur: safeDiv(totalDebtItemsCur, ebitda), totalDebtEbitdaPot: safeDiv(totalDebtItemsPot, ebitda),
+    roaCur: safeDiv(ebitda, s10.totalAssetsCur), roaPot: safeDiv(ebitda, s10.totalAssetsPot),
+    roeCur: safeDiv(ebitda, s10.eqCur), roePot: safeDiv(ebitda, s10.eqPot),
+    seniorDscrCur: safeDiv(ebitda, seniorDS), seniorDscrPot: safeDiv(ebitda, seniorDS),
+    totalDscrCur: safeDiv(ebitda, totalDS), totalDscrPot: safeDiv(ebitda, totalDS),
+    slbFccrCur: safeDiv(ebitda, slbCur), slbFccrPot: safeDiv(ebitda, slbPot),
+    seniorSlbFccrCur: safeDiv(ebitda, seniorDS+slbCur), seniorSlbFccrPot: safeDiv(ebitda, seniorDS+slbPot),
+    totalSlbFccrCur: safeDiv(ebitda, totalDS+slbCur), totalSlbFccrPot: safeDiv(ebitda, totalDS+slbPot),
+  };
+}
+function calcSection12(){
+  const revenue=n(D.s12.revenue), cogs=n(D.s12.cogs), opex=n(D.s12.opex);
+  const arDays = revenue ? (n(D.s12.arBal)/revenue)*365 : 0;
+  const invDays = cogs ? (n(D.s12.invBal)/cogs)*365 : 0;
+  const apDays = cogs ? (n(D.s12.apBal)/cogs)*365 : 0;
+  const ccc = arDays+invDays-apDays;
+  const dailyOpCost = opex/365;
+  const impliedCashNeed = ccc*dailyOpCost;
+  const currentOpBalance = n(D.s8.operating.cur);
+  return {arDays, invDays, apDays, ccc, dailyOpCost, impliedCashNeed, currentOpBalance, gap: currentOpBalance-impliedCashNeed};
+}
+
+/* ============================================================
+   EXHIBIT 2 — 3-STATEMENT PROJECTION MODEL
+   Methodology: revenue/COGS/OpEx via % growth & margin assumptions;
+   AR/Inv/AP via day-count (Section 12 logic); CapEx depreciated
+   straight-line over an assumed life; existing Term Debt amortizes
+   per input schedule; Revolver is a mechanical plug that draws to
+   hold a minimum cash target and pays down excess cash first;
+   all other tranches (LOC, Sub Debt, Shareholder Loans, Credit Cards)
+   held flat unless the user changes Year 0. Rates sourced from
+   Section 3 (toggle Current vs. Target). Interest computed on
+   beginning-of-year balances — no circularity.
+   ============================================================ */
+function calcExhibit2(){
+  const rs = D.ex2.rateScenario === 'tgt' ? 'tgt' : 'cur';
+  const rate = key => n(D.s3[key][rs]);
+
+  const y0 = {label:'Year 0 (Historical)'};
+  y0.revenue = n(D.s12.revenue);
+  y0.cogs = n(D.s12.cogs);
+  y0.opex = n(D.s12.opex);
+  y0.da = n(D.ex2.existingDA);
+  y0.grossProfit = y0.revenue - y0.cogs;
+  y0.ebitda = y0.grossProfit - y0.opex;
+  y0.ebit = y0.ebitda - y0.da;
+  y0.interestExpense = 0; y0.pretaxIncome = y0.ebit; y0.taxes = 0; y0.netIncome = y0.ebit;
+  y0.ar = n(D.s12.arBal); y0.inv = n(D.s12.invBal); y0.ap = n(D.s12.apBal);
+  y0.arDays = y0.revenue ? (y0.ar/y0.revenue)*365 : 0;
+  y0.invDays = y0.cogs ? (y0.inv/y0.cogs)*365 : 0;
+  y0.apDays = y0.cogs ? (y0.ap/y0.cogs)*365 : 0;
+  y0.cash = n(D.ex2.cashY0);
+  y0.otherCA = n(D.ex2.otherCAY0);
+  y0.ppeGross = n(D.ex2.ppeGrossY0);
+  y0.accumDep = n(D.ex2.accumDepY0);
+  y0.ppeNet = y0.ppeGross - y0.accumDep;
+  y0.otherAssets = n(D.ex2.otherAssetsY0);
+  y0.totalCurrentAssets = y0.cash+y0.ar+y0.inv+y0.otherCA;
+  y0.totalAssets = y0.totalCurrentAssets + y0.ppeNet + y0.otherAssets;
+  y0.otherCL = n(D.ex2.otherCLY0);
+  y0.termDebt = n(D.s2.termDebt.cur);
+  y0.revolver = n(D.s2.wcRevolver.cur);
+  y0.loc = n(D.s2.loc.cur);
+  y0.subDebt = n(D.s2.subDebt.cur);
+  y0.shareholderLoans = n(D.s2.shareholderLoans.cur);
+  y0.creditCards = n(D.s2.cc.cur);
+  y0.totalCurrentLiabilities = y0.ap+y0.otherCL+y0.revolver+y0.loc+y0.creditCards;
+  y0.totalLTLiabilities = y0.termDebt+y0.subDebt+y0.shareholderLoans;
+  y0.totalLiabilities = y0.totalCurrentLiabilities+y0.totalLTLiabilities;
+  y0.equity = y0.totalAssets - y0.totalLiabilities; // plug — historical BS must reconcile via equity
+  y0.capex = 0; y0.termAmort = 0; y0.dividends = 0; y0.revolverDraw = 0; y0.revolverPaydown = 0;
+  y0.balanceCheck = 0;
+
+  const years = [y0];
+  let prior = y0;
+  let cumulativeCapex = 0;
+  const depLife = n(D.ex2.depLife) || 7;
+  const taxRatePct = n(D.ex2.taxRate)/100;
+
+  for(let i=0;i<3;i++){
+    const yr = {label:'Year '+(i+1)};
+    yr.revenue = prior.revenue * (1 + n(D.ex2.revGrowth[i])/100);
+    yr.cogs = yr.revenue * n(D.ex2.cogsPct[i])/100;
+    yr.opex = yr.revenue * n(D.ex2.opexPct[i])/100;
+    yr.grossProfit = yr.revenue - yr.cogs;
+    yr.ebitda = yr.grossProfit - yr.opex;
+
+    yr.capex = n(D.ex2.capex[i]);
+    cumulativeCapex += yr.capex;
+    yr.da = y0.da + cumulativeCapex/depLife;
+    yr.ebit = yr.ebitda - yr.da;
+
+    yr.arDays = n(D.ex2.arDays[i]); yr.invDays = n(D.ex2.invDays[i]); yr.apDays = n(D.ex2.apDays[i]);
+    yr.ar = yr.revenue * yr.arDays/365;
+    yr.inv = yr.cogs * yr.invDays/365;
+    yr.ap = yr.cogs * yr.apDays/365;
+    const wcCashImpact = -(yr.ar-prior.ar) - (yr.inv-prior.inv) + (yr.ap-prior.ap);
+
+    const termRate=rate('termDebt'), revolverRate=rate('wcRevolver'), locRate=rate('loc'),
+          subRate=rate('subDebt'), shRate=rate('shareholderLoans'), ccRate=rate('cc');
+    yr.interestExpense = prior.termDebt*termRate + prior.revolver*revolverRate + prior.loc*locRate +
+                          prior.subDebt*subRate + prior.shareholderLoans*shRate + prior.creditCards*ccRate;
+    yr.pretaxIncome = yr.ebit - yr.interestExpense;
+    yr.taxes = yr.pretaxIncome > 0 ? yr.pretaxIncome*taxRatePct : 0;
+    yr.netIncome = yr.pretaxIncome - yr.taxes;
+
+    yr.cfo = yr.netIncome + yr.da + wcCashImpact;
+    yr.cfi = -yr.capex;
+    yr.termAmort = Math.min(n(D.ex2.termAmort[i]), prior.termDebt);
+    yr.dividends = n(D.ex2.dividends[i]);
+    const cashBeforeRevolver = prior.cash + yr.cfo + yr.cfi - yr.termAmort - yr.dividends;
+    const minCash = n(D.ex2.minCash[i]);
+    let revolverBal = prior.revolver;
+    yr.revolverDraw = 0; yr.revolverPaydown = 0; yr.revolverBreach = false;
+    if(cashBeforeRevolver < minCash){
+      let draw = minCash - cashBeforeRevolver;
+      const limit = n(D.ex2.revolverLimit[i]);
+      if(limit>0 && (revolverBal+draw) > limit){
+        draw = Math.max(0, limit - revolverBal);
+        yr.revolverBreach = true;
+      }
+      revolverBal += draw;
+      yr.revolverDraw = draw;
+      yr.cash = cashBeforeRevolver + draw;
+    } else {
+      const excess = cashBeforeRevolver - minCash;
+      const paydown = Math.min(excess, revolverBal);
+      revolverBal -= paydown;
+      yr.revolverPaydown = paydown;
+      yr.cash = cashBeforeRevolver - paydown;
+    }
+    yr.revolver = revolverBal;
+    yr.termDebt = prior.termDebt - yr.termAmort;
+    yr.subDebt = prior.subDebt;
+    yr.shareholderLoans = prior.shareholderLoans;
+    yr.loc = prior.loc;
+    yr.creditCards = prior.creditCards;
+
+    yr.otherCA = prior.otherCA;
+    yr.ppeGross = prior.ppeGross + yr.capex;
+    yr.accumDep = prior.accumDep + yr.da;
+    yr.ppeNet = yr.ppeGross - yr.accumDep;
+    yr.otherAssets = prior.otherAssets;
+    yr.totalCurrentAssets = yr.cash+yr.ar+yr.inv+yr.otherCA;
+    yr.totalAssets = yr.totalCurrentAssets+yr.ppeNet+yr.otherAssets;
+
+    yr.otherCL = prior.otherCL;
+    yr.totalCurrentLiabilities = yr.ap+yr.otherCL+yr.revolver+yr.loc+yr.creditCards;
+    yr.totalLTLiabilities = yr.termDebt+yr.subDebt+yr.shareholderLoans;
+    yr.totalLiabilities = yr.totalCurrentLiabilities+yr.totalLTLiabilities;
+    yr.equity = prior.equity + yr.netIncome - yr.dividends;
+    yr.balanceCheck = yr.totalAssets - (yr.totalLiabilities + yr.equity);
+
+    years.push(yr);
+    prior = yr;
+  }
+  return years;
+}
+
+/* ============================================================
+   EXHIBIT 2 — INPUT + LIVE OUTPUT RENDERING
+   ============================================================ */
+function ex2ArrField(label, arrName, dp){
+  const arr = D.ex2[arrName];
+  return `<tr><td class="col-label">${label}</td>${[0,1,2].map(i=>
+    `<td class="col-num"><input type="number" step="any" value="${arr[i]}" oninput="D.ex2.${arrName}[${i}]=this.value;renderExhibit2Input()"></td>`
+  ).join('')}</tr>`;
+}
+
+function renderExhibit2Input(){
+  document.getElementById('ex2-global').innerHTML = `
+    <h2>Global Assumptions</h2><p class="sub">Applied across all 3 projected years</p>
+    <div class="field-row">
+      <div><label>Rate Scenario (from Section 3)</label>
+        <select onchange="D.ex2.rateScenario=this.value;renderExhibit2Input()" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:14px;">
+          <option value="cur" ${D.ex2.rateScenario==='cur'?'selected':''}>Current Rates</option>
+          <option value="tgt" ${D.ex2.rateScenario==='tgt'?'selected':''}>Target Rates (post-restructure)</option>
+        </select>
+      </div>
+      <div><label>Tax Rate (%)</label><input type="number" step="any" value="${D.ex2.taxRate}" oninput="D.ex2.taxRate=this.value;renderExhibit2Input()"></div>
+    </div>
+    <div class="field-row">
+      <div><label>New CapEx Depreciation Life (years)</label><input type="number" step="any" value="${D.ex2.depLife}" oninput="D.ex2.depLife=this.value;renderExhibit2Input()"></div>
+      <div><label>Existing Annual D&amp;A Run-Rate ($)</label><input type="number" step="any" value="${D.ex2.existingDA}" oninput="D.ex2.existingDA=this.value;renderExhibit2Input()"></div>
+    </div>`;
+
+  document.getElementById('ex2-y0').innerHTML = `
+    <h2>Year 0 Base (Balance Sheet Items Not Captured Elsewhere)</h2>
+    <div class="field-row">
+      <div><label>Cash (Year 0)</label><input type="number" step="any" value="${D.ex2.cashY0}" oninput="D.ex2.cashY0=this.value;renderExhibit2Input()"></div>
+      <div><label>Other Current Assets (Year 0)</label><input type="number" step="any" value="${D.ex2.otherCAY0}" oninput="D.ex2.otherCAY0=this.value;renderExhibit2Input()"></div>
+    </div>
+    <div class="field-row">
+      <div><label>PP&amp;E, Gross (Year 0)</label><input type="number" step="any" value="${D.ex2.ppeGrossY0}" oninput="D.ex2.ppeGrossY0=this.value;renderExhibit2Input()"></div>
+      <div><label>Accumulated Depreciation (Year 0)</label><input type="number" step="any" value="${D.ex2.accumDepY0}" oninput="D.ex2.accumDepY0=this.value;renderExhibit2Input()"></div>
+    </div>
+    <div class="field-row">
+      <div><label>Other Assets (Year 0)</label><input type="number" step="any" value="${D.ex2.otherAssetsY0}" oninput="D.ex2.otherAssetsY0=this.value;renderExhibit2Input()"></div>
+      <div><label>Other Current Liabilities (Year 0)</label><input type="number" step="any" value="${D.ex2.otherCLY0}" oninput="D.ex2.otherCLY0=this.value;renderExhibit2Input()"></div>
+    </div>
+    <p class="hint">Revenue, COGS, OpEx, AR, Inventory, and AP for Year 0 are pulled from Section 12. Term Debt, Revolver, LOC, Subordinated Debt, Shareholder Loans, and Credit Cards for Year 0 are pulled from Section 2 (Current column). Year 0 Equity is a plug (Total Assets − Total Liabilities) so the historical balance sheet reconciles.</p>`;
+
+  document.getElementById('ex2-assumptions').innerHTML = `
+    <h2>Projection Assumptions — Year 1 / Year 2 / Year 3</h2>
+    <table class="grid"><tr><th class="col-label">Assumption</th><th class="col-num">Year 1</th><th class="col-num">Year 2</th><th class="col-num">Year 3</th></tr>
+    ${ex2ArrField('Revenue Growth (%)','revGrowth')}
+    ${ex2ArrField('COGS (% of Revenue)','cogsPct')}
+    ${ex2ArrField('OpEx, excl. D&A (% of Revenue)','opexPct')}
+    ${ex2ArrField('AR Days','arDays')}
+    ${ex2ArrField('Inventory Days','invDays')}
+    ${ex2ArrField('AP Days','apDays')}
+    ${ex2ArrField('CapEx ($)','capex')}
+    ${ex2ArrField('Term Debt Amortization ($)','termAmort')}
+    ${ex2ArrField('Dividends / Distributions ($)','dividends')}
+    ${ex2ArrField('Minimum Cash Target ($)','minCash')}
+    ${ex2ArrField('Revolver Limit ($, optional)','revolverLimit')}
+    </table>`;
+
+  const yrs = calcExhibit2();
+  document.getElementById('ex2-is').innerHTML = ex2TableSection('Income Statement', yrs, [
+    ['Revenue','revenue'],['COGS','cogs'],['Gross Profit','grossProfit'],['OpEx (excl. D&A)','opex'],
+    ['EBITDA','ebitda'],['D&A','da'],['EBIT','ebit'],['Interest Expense','interestExpense'],
+    ['Pretax Income','pretaxIncome'],['Taxes','taxes'],['Net Income','netIncome']
+  ]);
+  document.getElementById('ex2-wc').innerHTML = ex2TableSection('Working Capital', yrs, [
+    ['AR Days','arDays',1],['Inventory Days','invDays',1],['AP Days','apDays',1],
+    ['Accounts Receivable','ar'],['Inventory','inv'],['Accounts Payable','ap']
+  ]);
+  document.getElementById('ex2-debt').innerHTML = ex2TableSection('Debt & Interest Schedule', yrs, [
+    ['Term Debt (ending)','termDebt'],['Term Debt Amortization','termAmort'],
+    ['Revolver (ending)','revolver'],['Revolver Draw','revolverDraw'],['Revolver Paydown','revolverPaydown'],
+    ['Line of Credit','loc'],['Subordinated Debt','subDebt'],['Shareholder Loans','shareholderLoans'],
+    ['Credit Cards','creditCards'],['Interest Expense','interestExpense']
+  ]) + (yrs.some(y=>y.revolverBreach) ? '<div class="flag">Revolver Limit breached in at least one projected year — cash falls short of the minimum target as modeled. Raise the limit or adjust assumptions.</div>' : '');
+  document.getElementById('ex2-cf').innerHTML = ex2TableSection('Cash Flow', yrs, [
+    ['Net Income','netIncome'],['+ D&A','da'],['± Working Capital Change', null, 0, (y,i,arr)=> i===0?0:(-(y.ar-arr[i-1].ar)-(y.inv-arr[i-1].inv)+(y.ap-arr[i-1].ap))],
+    ['Cash Flow from Operations','cfo'],['CapEx','cfi'],['Term Debt Amortization','termAmort',0,(y)=>-y.termAmort],
+    ['Dividends','dividends',0,(y)=>-y.dividends],['Revolver Draw / (Paydown)','revolverDraw',0,(y)=>y.revolverDraw-y.revolverPaydown],
+    ['Ending Cash','cash']
+  ]);
+  document.getElementById('ex2-bs').innerHTML = ex2TableSection('Balance Sheet', yrs, [
+    ['Cash','cash'],['Accounts Receivable','ar'],['Inventory','inv'],['Other Current Assets','otherCA'],
+    ['Total Current Assets','totalCurrentAssets'],['PP&E, net of depreciation','ppeNet'],['Other Assets','otherAssets'],
+    ['Total Assets','totalAssets'],['Accounts Payable','ap'],['Other Current Liabilities','otherCL'],
+    ['Revolver','revolver'],['Line of Credit','loc'],['Credit Cards','creditCards'],
+    ['Total Current Liabilities','totalCurrentLiabilities'],['Term Debt','termDebt'],['Subordinated Debt','subDebt'],
+    ['Shareholder Loans','shareholderLoans'],['Total Long-Term Liabilities','totalLTLiabilities'],
+    ['Total Liabilities','totalLiabilities'],['Equity','equity'],['Balance Check (should be $0)','balanceCheck']
+  ]);
+}
+
+function ex2TableSection(title, yrs, rows){
+  let html = `<h2>${title}</h2><table class="grid"><tr><th class="col-label">Line Item</th>${yrs.map(y=>`<th class="col-num">${y.label}</th>`).join('')}</tr>`;
+  rows.forEach(([label,key,dp,fn])=>{
+    html += `<tr><td class="col-label">${label}</td>${yrs.map((y,i)=>{
+      const val = fn ? fn(y,i,yrs) : y[key];
+      const display = dp!==undefined ? fmt(val,{dp}) : fmtMoney(val);
+      return `<td class="col-num gap-cell ${gapClass(val)}">${display}</td>`;
+    }).join('')}</tr>`;
+  });
+  html += `</table>`;
+  return html;
+}
+
+/* ============================================================
+   VIEW SWITCHING + REPORT RENDER
+   ============================================================ */
+function showView(view){
+  document.getElementById('navAudits').classList.toggle('active', view==='audits');
+  document.getElementById('navInput').classList.toggle('active', view==='input');
+  document.getElementById('navEx2').classList.toggle('active', view==='ex2');
+  document.getElementById('navReport').classList.toggle('active', view==='report');
+  document.getElementById('auditsWrap').style.display = view==='audits' ? 'block' : 'none';
+  document.getElementById('inputWrap').style.display = view==='input' ? 'block' : 'none';
+  document.getElementById('ex2Wrap').style.display = view==='ex2' ? 'block' : 'none';
+  document.getElementById('reportWrap').className = view==='report' ? 'visible' : '';
+  if(view==='audits') fetchAndRenderAudits();
+  if(view==='ex2') renderExhibit2Input();
+  if(view==='report') renderReport();
+  window.scrollTo(0,0);
+}
+
+const LOGO_MARK_SM = `<svg viewBox="150 280 185 208" xmlns="http://www.w3.org/2000/svg" width="20" height="20" style="flex-shrink:0;"><polygon fill="#1a4b8c" points="242.74669 285.5804 256.15816 374.10946 327.42649 334.47028"/><polygon fill="#4a7fc4" points="329.32111 430.70878 329.32111 335.56417 258.07371 383.13647"/><polygon fill="#002347" points="154.63524 335.56417 154.63524 430.70878 225.88271 383.13647"/><polygon fill="#0047ab" points="227.7982 374.10946 241.20966 285.5804 156.52986 334.47028"/><polygon fill="#0047ab" points="227.7982 392.16349 155.13954 432.57591 241.4713 482.4196"/><polygon fill="#1a4b8c" points="256.15816 392.16349 242.48506 482.4196 328.81682 432.57591"/></svg>`;
+const LOGO_MARK_LG = `<svg viewBox="150 280 185 208" xmlns="http://www.w3.org/2000/svg" width="52" height="52"><polygon fill="#1a4b8c" points="242.74669 285.5804 256.15816 374.10946 327.42649 334.47028"/><polygon fill="#4a7fc4" points="329.32111 430.70878 329.32111 335.56417 258.07371 383.13647"/><polygon fill="#002347" points="154.63524 335.56417 154.63524 430.70878 225.88271 383.13647"/><polygon fill="#0047ab" points="227.7982 374.10946 241.20966 285.5804 156.52986 334.47028"/><polygon fill="#0047ab" points="227.7982 392.16349 155.13954 432.57591 241.4713 482.4196"/><polygon fill="#1a4b8c" points="256.15816 392.16349 242.48506 482.4196 328.81682 432.57591"/></svg>`;
+const FULL_LOGO_INNER = `<polygon id="polygon2" fill="#1a4b8c" points="242.74669 285.5804 256.15816 374.10946 327.42649 334.47028" /> <polygon id="polygon4" fill="#4a7fc4" points="329.32111 430.70878 329.32111 335.56417 258.07371 383.13647" /> <polygon id="polygon6" fill="#002347" points="154.63524 335.56417 154.63524 430.70878 225.88271 383.13647" /> <polygon id="polygon8" fill="#0047ab" points="227.7982 374.10946 241.20966 285.5804 156.52986 334.47028" /> <polygon id="polygon10" fill="#0047ab" points="227.7982 392.16349 155.13954 432.57591 241.4713 482.4196" /> <polygon id="polygon12" fill="#1a4b8c" points="256.15816 392.16349 242.48506 482.4196 328.81682 432.57591" /> <g style="fill:#002347" id="g24"> <path id="path14" d="m 441.8149,347.11795 -8.78946,10.01303 c -4.78384,-5.34015 -11.68195,-9.34577 -20.36045,-9.34577 -16.4658,0 -27.48048,12.34973 -27.48048,29.59476 0,17.02261 11.01469,29.48329 27.48048,29.48329 9.01238,0 16.02146,-4.11658 20.8053,-9.79061 l 8.6785,10.23596 c -7.78831,8.56704 -17.69038,12.34973 -29.4838,12.34973 -24.2541,0 -41.6106,-18.13522 -41.6106,-42.27837 0,-24.36557 17.35649,-42.38933 41.6106,-42.38933 12.46119,0 21.47307,4.22753 29.14991,12.1273 z" /> <path id="path16" d="m 542.05568,377.37998 c 0,24.47703 -17.80134,42.27837 -41.6111,42.27837 -23.92022,0 -41.6106,-17.80134 -41.6106,-42.27837 0,-24.36557 17.69038,-42.38933 41.6106,-42.38933 23.80976,0 41.6111,18.02376 41.6111,42.38933 z m -69.09159,0 c 0,17.24503 11.34807,29.48329 27.48048,29.48329 16.02146,0 27.48099,-12.23826 27.48099,-29.48329 0,-17.24503 -11.45953,-29.59476 -27.48099,-29.59476 -16.13242,0 -27.48048,12.34973 -27.48048,29.59476 z" /> <path id="path18" d="m 623.38149,358.2436 c 0,8.56704 -4.56142,14.01865 -8.90042,16.4663 8.78946,2.67007 15.57611,8.45557 15.57611,20.13753 0,14.90884 -11.571,23.36441 -26.92468,23.36441 h -35.60268 v -81.77469 h 30.15106 c 16.4663,0 25.7006,8.34411 25.7006,21.80645 z m -42.05544,-9.12334 v 21.58403 h 15.35369 c 7.89926,0 12.68361,-4.44996 12.68361,-10.79176 0,-6.78665 -4.67288,-10.79227 -13.46234,-10.79227 z m 0,33.26648 v 23.14149 h 20.13753 c 8.90092,0 14.57496,-4.00511 14.57496,-11.57049 0,-7.45442 -5.34015,-11.571 -15.46464,-11.571 h -19.24784 z" /> <path id="path20" d="m 761.5581,405.86212 h 37.04867 v 12.34973 h -50.95636 v -81.77469 h 13.90769 v 69.42497 z" /> <path id="path22" d="m 869.36476,348.78688 h -27.70291 v 69.42497 h -13.90769 v -69.42497 h -27.70291 v -12.34973 h 69.3135 v 12.34973 z" /> </g> <polygon id="polygon26" fill="#002347" points="686.35066 334.99065 685.90582 334.99065 647.41014 418.21184 662.54141 418.21184 686.12824 363.58375 709.71508 418.21184 724.84584 418.21184" /> <polygon id="polygon28" fill="#0047ab" points="675.65591 418.21184 686.12824 393.95749 696.60057 418.21184" /> <g style="fill:#1a4b8c" id="g62"> <path id="path30" d="m 382.62256,442.73596 c 0.86963,-0.86963 1.89795,-1.54346 3.0874,-2.02197 1.18799,-0.47803 2.49268,-0.71729 3.91309,-0.71729 1.50684,0 2.90576,0.3042 4.19629,0.91309 1.28955,0.60889 2.44189,1.50781 3.45654,2.6958 l 4.56592,-4.17432 c -1.4502,-1.76758 -3.24707,-3.10889 -5.39209,-4.02197 -2.14551,-0.91309 -4.53711,-1.36963 -7.17432,-1.36963 -2.34814,0 -4.52979,0.38477 -6.54443,1.15234 -2.01514,0.76855 -3.76855,1.86279 -5.26123,3.28271 -1.49316,1.4209 -2.65234,3.0874 -3.47852,5.00049 -0.82617,1.91357 -1.23926,4.01562 -1.23926,6.30518 0,2.29004 0.41309,4.3916 1.23926,6.30469 0.82617,1.91357 1.97852,3.58057 3.45703,5.00049 1.47803,1.4209 3.22412,2.51514 5.23926,3.2832 2.01465,0.76758 4.19629,1.15234 6.54443,1.15234 2.6665,0 5.07227,-0.46436 7.21777,-1.3916 2.14502,-0.92725 3.94189,-2.27539 5.39209,-4.04395 l -4.56592,-4.17432 c -1.01465,1.18896 -2.16699,2.09473 -3.45654,2.71777 -1.29053,0.62354 -2.68945,0.93506 -4.19629,0.93506 -1.42041,0 -2.7251,-0.23926 -3.91309,-0.71777 -1.18945,-0.47803 -2.21777,-1.15234 -3.0874,-2.02197 -0.86963,-0.86963 -1.54395,-1.89795 -2.02197,-3.08691 -0.47852,-1.18848 -0.71729,-2.50732 -0.71729,-3.95703 0,-1.44922 0.23877,-2.76807 0.71729,-3.95703 0.47803,-1.18848 1.15234,-2.21777 2.02197,-3.0874 z" /> <path id="path32" d="m 431.45312,438.47473 c -1.50732,-1.41992 -3.26855,-2.51416 -5.2832,-3.28271 -2.01514,-0.76758 -4.2251,-1.15234 -6.63086,-1.15234 -2.40674,0 -4.6167,0.39111 -6.63086,1.17383 -2.01562,0.78271 -3.77637,1.88477 -5.2832,3.30469 -1.50781,1.4209 -2.67432,3.08057 -3.50049,4.979 -0.82617,1.89893 -1.23926,3.99365 -1.23926,6.2832 0,2.26123 0.41309,4.34814 1.23926,6.26123 0.82617,1.91357 1.99268,3.58057 3.50049,5.00049 1.50684,1.4209 3.27539,2.52197 5.30469,3.30469 2.02881,0.78271 4.24658,1.17432 6.65283,1.17432 2.37646,0 4.57227,-0.38477 6.5874,-1.15234 2.01465,-0.76807 3.77588,-1.8623 5.2832,-3.2832 1.50684,-1.41992 2.67432,-3.09375 3.50049,-5.02197 0.82617,-1.92773 1.23926,-4.02197 1.23926,-6.2832 0,-2.28955 -0.41309,-4.3916 -1.23926,-6.30518 -0.82617,-1.91309 -1.99365,-3.57959 -3.50049,-5.00049 z m -3.10888,15.24072 c -0.47852,1.17383 -1.15234,2.20312 -2.02197,3.0874 -0.86963,0.88428 -1.87744,1.56543 -3.02197,2.04346 -1.14551,0.47852 -2.39893,0.71777 -3.76123,0.71777 -1.36279,0 -2.62402,-0.23926 -3.7832,-0.71777 -1.15967,-0.47803 -2.16699,-1.15918 -3.02197,-2.04346 -0.85547,-0.88428 -1.52197,-1.91357 -2,-3.0874 -0.47852,-1.17383 -0.71729,-2.48535 -0.71729,-3.93506 0,-1.44922 0.23877,-2.76123 0.71729,-3.93506 0.47803,-1.17432 1.14453,-2.20264 2,-3.0874 0.85498,-0.88379 1.8623,-1.56543 3.02197,-2.04395 1.15918,-0.47803 2.42041,-0.71729 3.7832,-0.71729 1.3623,0 2.61572,0.23926 3.76123,0.71729 1.14453,0.47852 2.15234,1.16016 3.02197,2.04395 0.86963,0.88477 1.54346,1.91309 2.02197,3.0874 0.47852,1.17383 0.71729,2.48584 0.71729,3.93506 0,1.44971 -0.23877,2.76123 -0.71729,3.93506 z" /> <path id="polygon34" d="m 441.49756,434.56165 v 30.4375 h 6.56592 v -17.95252 l 8.95752,14.69129 h 3.13086 l 8.96624,-14.89313 0.0777,18.15436 h 6.56592 v -30.4375 h -5.87012 l -11.16882,18.89502 -11.39856,-18.89502 z" style="" /> <path id="polygon36" d="m 483.02295,434.56165 v 30.4375 h 6.56592 v -17.95252 l 8.95752,14.69129 h 3.13086 l 8.96624,-14.89313 0.0777,18.15436 h 6.56592 v -30.4375 h -5.87012 l -11.16882,18.89502 -11.39856,-18.89502 z" style="" /> <path id="polygon38" d="M 545.68164,446.77991 H 531.5498 v -6.56592 h 16.00147 v -5.65234 h -23.00244 v 30.4375 h 23.56738 v -5.65284 H 531.5498 v -7.04394 h 14.13184 z" style="" /> <path id="path40" d="m 573.94482,455.19397 c 1.97119,-0.85498 3.49316,-2.10156 4.56592,-3.73975 1.07227,-1.63721 1.60889,-3.60156 1.60889,-5.8916 0,-3.42041 -1.17432,-6.10938 -3.52197,-8.06592 -2.34814,-1.95703 -5.63867,-2.93506 -9.87061,-2.93506 h -13.00146 v 30.4375 h 7.08789 v -8.52246 h 6.0874 c 0.10492,0 0.20007,-0.0111 0.30389,-0.0123 l 5.91388,8.53479 h 7.56641 l -6.78369,-9.78943 c 0.0138,-0.006 0.0297,-0.01 0.0435,-0.0157 z m -2.56543,-13.52295 c 1.10156,0.91309 1.65234,2.21045 1.65234,3.8916 0,1.68164 -0.55078,2.98584 -1.65234,3.91309 -1.10205,0.92822 -2.7251,1.3916 -4.86963,1.3916 h -5.69629 V 440.3009 h 5.69629 c 2.14453,0 3.76758,0.45703 4.86963,1.37012 z" /> <path id="path42" d="m 593.64258,442.73596 c 0.86963,-0.86963 1.89795,-1.54346 3.0874,-2.02197 1.18799,-0.47803 2.49268,-0.71729 3.91309,-0.71729 1.50684,0 2.90576,0.3042 4.19629,0.91309 1.28955,0.60889 2.44189,1.50781 3.45654,2.6958 l 4.56592,-4.17432 c -1.4502,-1.76758 -3.24707,-3.10889 -5.39209,-4.02197 -2.14551,-0.91309 -4.53711,-1.36963 -7.17432,-1.36963 -2.34814,0 -4.52979,0.38477 -6.54443,1.15234 -2.01514,0.76855 -3.76855,1.86279 -5.26123,3.28271 -1.49316,1.4209 -2.65234,3.0874 -3.47852,5.00049 -0.82617,1.91357 -1.23926,4.01562 -1.23926,6.30518 0,2.29004 0.41309,4.3916 1.23926,6.30469 0.82617,1.91357 1.97852,3.58057 3.45703,5.00049 1.47803,1.4209 3.22412,2.51514 5.23926,3.2832 2.01465,0.76758 4.19629,1.15234 6.54443,1.15234 2.6665,0 5.07227,-0.46436 7.21777,-1.3916 2.14502,-0.92725 3.94189,-2.27539 5.39209,-4.04395 l -4.56592,-4.17432 c -1.01465,1.18896 -2.16699,2.09473 -3.45654,2.71777 -1.29053,0.62354 -2.68945,0.93506 -4.19629,0.93506 -1.42041,0 -2.7251,-0.23926 -3.91309,-0.71777 -1.18945,-0.47803 -2.21777,-1.15234 -3.0874,-2.02197 -0.86963,-0.86963 -1.54395,-1.89795 -2.02197,-3.08691 -0.47852,-1.18848 -0.71729,-2.50732 -0.71729,-3.95703 0,-1.44922 0.23877,-2.76807 0.71729,-3.95703 0.47803,-1.18848 1.15234,-2.21777 2.02197,-3.0874 z" /> <path id="rect44" d="m 617.1665,434.56165 h 7.08789 v 30.4375 h -7.08789 z" style="" /> <path id="path46" d="m 640.95166,434.56165 -13.52295,30.4375 h 7.21777 l 2.71252,-6.52246 h 14.09851 l 2.7124,6.52246 h 7.39209 l -13.65332,-30.4375 h -6.95703 z m -1.36853,18.56689 4.82526,-11.60291 4.82513,11.60291 z" /> <path id="polygon48" d="m 664.73633,464.99915 h 22.26318 v -5.73975 h -15.17529 v -24.69775 h -7.08789 z" style="" /> <path id="path50" d="m 711.2627,442.73596 c 0.86963,-0.86963 1.89795,-1.54346 3.0874,-2.02197 1.18799,-0.47803 2.49268,-0.71729 3.91309,-0.71729 1.50684,0 2.90576,0.3042 4.19629,0.91309 1.28955,0.60889 2.44189,1.50781 3.45654,2.6958 l 4.56592,-4.17432 c -1.4502,-1.76758 -3.24707,-3.10889 -5.39209,-4.02197 -2.14551,-0.91309 -4.53711,-1.36963 -7.17432,-1.36963 -2.34814,0 -4.52979,0.38477 -6.54443,1.15234 -2.01514,0.76855 -3.76855,1.86279 -5.26123,3.28271 -1.49316,1.4209 -2.65234,3.0874 -3.47852,5.00049 -0.82617,1.91357 -1.23926,4.01562 -1.23926,6.30518 0,2.29004 0.41309,4.3916 1.23926,6.30469 0.82617,1.91357 1.97852,3.58057 3.45703,5.00049 1.47803,1.4209 3.22412,2.51514 5.23926,3.2832 2.01465,0.76758 4.19629,1.15234 6.54443,1.15234 2.6665,0 5.07227,-0.46436 7.21777,-1.3916 2.14502,-0.92725 3.94189,-2.27539 5.39209,-4.04395 l -4.56592,-4.17432 c -1.01465,1.18896 -2.16699,2.09473 -3.45654,2.71777 -1.29053,0.62354 -2.68945,0.93506 -4.19629,0.93506 -1.42041,0 -2.7251,-0.23926 -3.91309,-0.71777 -1.18945,-0.47803 -2.21777,-1.15234 -3.0874,-2.02197 -0.86963,-0.86963 -1.54395,-1.89795 -2.02197,-3.08691 -0.47852,-1.18848 -0.71729,-2.50732 -0.71729,-3.95703 0,-1.44922 0.23877,-2.76807 0.71729,-3.95703 0.47803,-1.18848 1.15234,-2.21777 2.02197,-3.0874 z" /> <path id="path52" d="m 755.00537,455.19397 c 1.97119,-0.85498 3.49316,-2.10156 4.56592,-3.73975 1.07227,-1.63721 1.60889,-3.60156 1.60889,-5.8916 0,-3.42041 -1.17432,-6.10938 -3.52197,-8.06592 -2.34814,-1.95703 -5.63867,-2.93506 -9.87061,-2.93506 h -13.00146 v 30.4375 h 7.08789 v -8.52246 h 6.0874 c 0.10492,0 0.20007,-0.0111 0.30389,-0.0123 l 5.91388,8.53479 h 7.56641 l -6.78369,-9.78943 c 0.0139,-0.006 0.0297,-0.01 0.0435,-0.0157 z m -2.56543,-13.52295 c 1.10156,0.91309 1.65234,2.21045 1.65234,3.8916 0,1.68164 -0.55078,2.98584 -1.65234,3.91309 -1.10205,0.92822 -2.7251,1.3916 -4.86963,1.3916 h -5.69629 V 440.3009 h 5.69629 c 2.14453,0 3.76758,0.45703 4.86963,1.37012 z" /> <path id="polygon54" d="m 787.87842,446.77991 h -14.13184 v -6.56592 h 16.00147 v -5.65234 h -23.00244 v 30.4375 h 23.56738 v -5.65284 h -16.56641 v -7.04394 h 14.13184 z" style="" /> <path id="path56" d="m 818.48975,436.45276 c -2.52197,-1.26074 -5.43506,-1.89111 -8.73975,-1.89111 h -13.82764 v 30.4375 H 809.75 c 3.30469,0 6.21777,-0.63037 8.73975,-1.8916 2.52197,-1.26074 4.49316,-3.02881 5.91357,-5.30469 1.41992,-2.27539 2.13086,-4.94971 2.13086,-8.02246 0,-3.07227 -0.71094,-5.74658 -2.13086,-8.02246 -1.42041,-2.27539 -3.3916,-4.04395 -5.91357,-5.30518 z m -0.32618,18.34961 c -0.82617,1.43506 -1.98584,2.53711 -3.47852,3.30469 -1.49316,0.76855 -3.25439,1.15234 -5.2832,1.15234 h -6.3916 v -18.9585 h 6.3916 c 2.02881,0 3.79004,0.38477 5.2832,1.15234 1.49268,0.76855 2.65234,1.86328 3.47852,3.2832 0.82617,1.42041 1.23926,3.10205 1.23926,5.04395 0,1.91309 -0.41309,3.5874 -1.23926,5.02197 z" /> <path id="rect58" d="m 831.83887,434.56165 h 7.08789 v 30.4375 h -7.08789 z" style="" /> <path id="polygon60" d="m 852.40625,440.3009 v 24.69825 h 7.04395 V 440.3009 h 9.74023 v -5.73925 h -26.52441 v 5.73925 z" style="" /> </g>`;
+function fullLogoSvg(width, opts){
+  opts = opts || {};
+  var h = opts.height ? ('height="'+opts.height+'"') : '';
+  return '<svg viewBox="145 275 735 220" xmlns="http://www.w3.org/2000/svg" width="'+width+'" '+h+'>' + FULL_LOGO_INNER + '</svg>';
+}
+
+function reportHeaderHTML(){
+  return `<div class="sheet-header"><div class="mark">${fullLogoSvg(150)}</div><div class="co" style="text-align:right;">Newport Beach</div></div>`;
+}
+
+function renderReport(){
+  const s4=calcSection4(), s7=calcSection7(), s9=calcSection9(), s11=calcSection11(), s12=calcSection12();
+  const s10 = D._s10calc || {};
+  const ex2yrs = calcExhibit2();
+  const today = D.cover.date || new Date().toISOString().slice(0,10);
+  const dateStr = new Date(today+'T00:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+
+  const sections = [
+    {n:1, t:'Asset Dynamics', body: sectionTableHTML(S1_ITEMS, D.s1, false, 'Total Asset Dynamics')},
+    {n:2, t:'Liability Dynamics', body: sectionTableHTML(S23_ITEMS, D.s2, false, 'Total Liability Dynamics')},
+    {n:3, t:'Liability Cost Factors', body: sectionTableHTML(S23_ITEMS, D.s3, true, 'Total (Sum of Rates)')},
+    {n:4, t:'Debt Cost Optimization Projection', body: reportDerivedTable(S23_ITEMS, s4, false, 'Total Annual Interest Cost')},
+    {n:5, t:'Liquidity Requirements Dynamics', body: sectionTableHTML(S5_ITEMS, D.s5, false, 'Total Liquidity Requirements')},
+    {n:6, t:'Yield Optimization Assumption', body: sectionTableHTML(S68_ITEMS, D.s6, true, null)},
+    {n:7, t:'Yield Optimization Weighting', body: reportDerivedTable(S68_ITEMS, s7, true, 'Total Weighted Yield')},
+    {n:8, t:'Tiered Cash Structures', body: sectionTableHTML(S68_ITEMS, D.s8, false, 'Total Cash Structures')},
+    {n:9, t:'Yield Optimization Projection', body: reportDerivedTable(S68_ITEMS, s9, false, 'Total Annual Yield Income')},
+    {n:10, t:'Capital Structure Review', body: reportSection10HTML()},
+    {n:11, t:'Capital Structure Ratios', body: renderS11Table()},
+    {n:12, t:'Cash Conversion Cycle Analysis', body: reportSection12HTML(s12)},
+    {n:13, t:'Exhibit 2 — Income Statement', body: reportEx2Table(ex2yrs, [
+      ['Revenue','revenue'],['COGS','cogs'],['Gross Profit','grossProfit'],['OpEx (excl. D&A)','opex'],
+      ['EBITDA','ebitda'],['D&A','da'],['EBIT','ebit'],['Interest Expense','interestExpense'],
+      ['Pretax Income','pretaxIncome'],['Taxes','taxes'],['Net Income','netIncome']])},
+    {n:14, t:'Exhibit 2 — Working Capital', body: reportEx2Table(ex2yrs, [
+      ['AR Days','arDays',1],['Inventory Days','invDays',1],['AP Days','apDays',1],
+      ['Accounts Receivable','ar'],['Inventory','inv'],['Accounts Payable','ap']])},
+    {n:15, t:'Exhibit 2 — Debt & Interest Schedule', body: reportEx2Table(ex2yrs, [
+      ['Term Debt (ending)','termDebt'],['Term Debt Amortization','termAmort'],
+      ['Revolver (ending)','revolver'],['Revolver Draw','revolverDraw'],['Revolver Paydown','revolverPaydown'],
+      ['Line of Credit','loc'],['Subordinated Debt','subDebt'],['Shareholder Loans','shareholderLoans'],
+      ['Credit Cards','creditCards'],['Interest Expense','interestExpense']])},
+    {n:16, t:'Exhibit 2 — Cash Flow', body: reportEx2Table(ex2yrs, [
+      ['Net Income','netIncome'],['+ D&A','da'],['Cash Flow from Operations','cfo'],['CapEx (Cash Outflow)','cfi'],
+      ['Term Debt Amortization','termAmort',0,(y)=>-y.termAmort],['Dividends','dividends',0,(y)=>-y.dividends],
+      ['Revolver Draw / (Paydown)','revolverDraw',0,(y)=>y.revolverDraw-y.revolverPaydown],['Ending Cash','cash']])},
+    {n:17, t:'Exhibit 2 — Balance Sheet', body: reportEx2Table(ex2yrs, [
+      ['Cash','cash'],['Accounts Receivable','ar'],['Inventory','inv'],['Other Current Assets','otherCA'],
+      ['Total Current Assets','totalCurrentAssets'],['PP&E, net of depreciation','ppeNet'],['Other Assets','otherAssets'],
+      ['Total Assets','totalAssets'],['Accounts Payable','ap'],['Other Current Liabilities','otherCL'],
+      ['Revolver','revolver'],['Line of Credit','loc'],['Credit Cards','creditCards'],
+      ['Total Current Liabilities','totalCurrentLiabilities'],['Term Debt','termDebt'],['Subordinated Debt','subDebt'],
+      ['Shareholder Loans','shareholderLoans'],['Total Long-Term Liabilities','totalLTLiabilities'],
+      ['Total Liabilities','totalLiabilities'],['Equity','equity']])},
+  ];
+
+  let html = `
+  <div class="sheet cover">
+    ${reportHeaderHTML()}
+    <div style="margin-top:50px;">${fullLogoSvg(280)}</div><div class="title" style="margin-top:22px;">Treasury Firepower<br><span>Audit</span></div>
+    <div class="meta-grid">
+      <div><h4>Prepared For</h4><p>${escapeHTML(D.cover.name||'—')}</p><p>${escapeHTML(D.cover.company||'')}</p></div>
+      <div><h4>Prepared By</h4><p>${escapeHTML(D.cover.by||'Armen Grigorian')}</p><p>Cobalt Commercial Credit</p></div>
+    </div>
+    <div class="disclosure">This analysis must be reviewed in conjunction with the limitations and conditions disclosed in the Disclaimer page. Projections are based on assumptions provided by the advisor/representative and are not guaranteed. Actual results will vary, perhaps to a significant degree. The projected figures are hypothetical and for illustrative purposes only. Return assumptions do not reflect the deduction of any commissions and will reflect fees or product charges when entered by the advisor/representative. Deduction of such charges would result in a lower rate of return. Consult your legal and/or tax advisor before implementing any tax or legal strategies.</div>
+    <div class="footer-date">${dateStr}</div><div class="confidential">CONFIDENTIAL</div>
+  </div>
+  <div class="sheet toc">
+    ${reportHeaderHTML()}
+    <h3>Table of Contents</h3>
+    <ol>${sections.map(s=>`<li><span>Section ${s.n} — ${s.t}</span></li>`).join('')}</ol>
+  </div>
+  ${sections.map(s=>`
+  <div class="sheet">
+    ${reportHeaderHTML()}
+    <div class="section-num">Section ${s.n}</div>
+    <h3 class="section-title">${s.t}</h3>
+    ${s.body}
+    <div class="footnote">This analysis is illustrative and based on market rates and yields as of the date stated on the cover of this presentation; actual results will vary and are not guaranteed.</div>
+  </div>`).join('')}
+  `;
+  document.getElementById('reportBody').innerHTML = html;
+}
+
+function sectionTableHTML(items, store, isRate, totalLabel){
+  let curT=0,tgtT=0;
+  const rows = items.map(([k,label])=>{
+    const cur=n(store[k].cur), tgt=n(store[k].tgt), gap=cur-tgt;
+    curT+=cur; tgtT+=tgt;
+    return `<tr><td>${label}</td><td class="num">${isRate?fmt(cur,{pct:true,dp:2}):fmtMoney(cur)}</td><td class="num">${isRate?fmt(tgt,{pct:true,dp:2}):fmtMoney(tgt)}</td><td class="num">${isRate?fmt(gap,{pct:true,dp:2}):fmtMoney(gap)}</td></tr>`;
+  }).join('');
+  const totalRowHTML = totalLabel ? `<tr class="total"><td>${totalLabel}</td><td class="num">${isRate?fmt(curT,{pct:true,dp:2}):fmtMoney(curT)}</td><td class="num">${isRate?fmt(tgtT,{pct:true,dp:2}):fmtMoney(tgtT)}</td><td class="num">${isRate?fmt(curT-tgtT,{pct:true,dp:2}):fmtMoney(curT-tgtT)}</td></tr>` : '';
+  return `<table class="rpt"><tr><th>Line Item</th><th class="num">Current</th><th class="num">Target</th><th class="num">Gap</th></tr>${rows}${totalRowHTML}</table>`;
+}
+function reportDerivedTable(items, calc, isRate, totalLabel){
+  return `<table class="rpt"><tr><th>Line Item</th><th class="num">Current</th><th class="num">Target</th><th class="num">Gap</th></tr>${calc.rows}<tr class="total"><td>${totalLabel}</td><td class="num">${isRate?fmt(calc.curT,{pct:true,dp:3}):fmtMoney(calc.curT)}</td><td class="num">${isRate?fmt(calc.tgtT,{pct:true,dp:3}):fmtMoney(calc.tgtT)}</td><td class="num">${isRate?fmt(calc.gap,{pct:true,dp:3}):fmtMoney(calc.gap)}</td></tr></table>`;
+}
+function reportEx2Table(yrs, rows){
+  let html = `<table class="rpt"><tr><th>Line Item</th>${yrs.map(y=>`<th class="num">${y.label}</th>`).join('')}</tr>`;
+  rows.forEach(([label,key,dp,fn])=>{
+    html += `<tr><td>${label}</td>${yrs.map((y,i)=>{
+      const val = fn ? fn(y,i,yrs) : y[key];
+      return `<td class="num">${dp!==undefined ? fmt(val,{dp}) : fmtMoney(val)}</td>`;
+    }).join('')}</tr>`;
+  });
+  html += `</table>`;
+  return html;
+}
+function escapeHTML(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+function reportSection10HTML(){
+  const s10 = D._s10calc || {};
+  const row = (label,key)=>{ const r=D.s10[key]; const pot=n(r.cur)+n(r.adjP)-n(r.adjM); return `<tr><td>${label}</td><td class="num">${fmtMoney(r.cur)}</td><td class="num">${fmtMoney(r.adjP)}</td><td class="num">${fmtMoney(r.adjM)}</td><td class="num">${fmtMoney(pot)}</td></tr>`; };
+  const groupHeader = t=>`<tr><td colspan="5" style="font-weight:700;padding-top:10px;color:var(--cobalt);font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;">${t}</td></tr>`;
+  let html = `<table class="rpt"><tr><th>Line Item</th><th class="num">Current</th><th class="num">Adj. (+)</th><th class="num">Adj. (−)</th><th class="num">Potential</th></tr>`;
+  html += groupHeader('Current Assets');
+  S10_ASSET_ITEMS.forEach(([k,label])=> html+=row(label,k));
+  html += `<tr class="total"><td>Total Current Assets</td><td class="num">${fmtMoney(s10.caCur)}</td><td></td><td></td><td class="num">${fmtMoney(s10.caPot)}</td></tr>`;
+  html += groupHeader('Fixed &amp; Other Assets');
+  S10_FIXED_ITEMS.forEach(([gk,glabel,dk,dlabel])=>{ html+=row(glabel,gk); html+=row(dlabel,dk); });
+  S10_OTHER_ASSET_ITEMS.forEach(([k,label])=> html+=row(label,k));
+  html += `<tr class="total"><td>Total Assets</td><td class="num">${fmtMoney(s10.totalAssetsCur)}</td><td></td><td></td><td class="num">${fmtMoney(s10.totalAssetsPot)}</td></tr>`;
+  html += groupHeader('Current Liabilities');
+  S10_CL_ITEMS.forEach(([k,label])=> html+=row(label,k));
+  html += `<tr class="total"><td>Total Current Liabilities</td><td class="num">${fmtMoney(s10.clCur)}</td><td></td><td></td><td class="num">${fmtMoney(s10.clPot)}</td></tr>`;
+  html += groupHeader('Long-Term Liabilities');
+  S10_LTL_ITEMS.forEach(([k,label])=> html+=row(label,k));
+  html += `<tr class="total"><td>Total Long-Term Liabilities</td><td class="num">${fmtMoney(s10.ltlCur)}</td><td></td><td></td><td class="num">${fmtMoney(s10.ltlPot)}</td></tr>`;
+  html += `<tr class="total"><td>Total Liabilities</td><td class="num">${fmtMoney(s10.totalLiabCur)}</td><td></td><td></td><td class="num">${fmtMoney(s10.totalLiabPot)}</td></tr>`;
+  html += groupHeader('Equity');
+  S10_EQUITY_ITEMS.forEach(([k,label])=> html+=row(label,k));
+  html += `<tr class="total"><td>Total Equity</td><td class="num">${fmtMoney(s10.eqCur)}</td><td></td><td></td><td class="num">${fmtMoney(s10.eqPot)}</td></tr>`;
+  html += `</table>`;
+  return html;
+}
+
+function reportSection12HTML(r){
+  return `<table class="rpt">
+    <tr><th>Metric</th><th class="num">Value</th></tr>
+    <tr><td>AR Days</td><td class="num">${r.arDays.toFixed(1)}</td></tr>
+    <tr><td>Inventory Days</td><td class="num">${r.invDays.toFixed(1)}</td></tr>
+    <tr><td>AP Days</td><td class="num">${r.apDays.toFixed(1)}</td></tr>
+    <tr class="total"><td>Cash Conversion Cycle (Days)</td><td class="num">${r.ccc.toFixed(1)}</td></tr>
+    <tr><td>Daily Operating Cost</td><td class="num">${fmtMoney(r.dailyOpCost)}</td></tr>
+    <tr class="total"><td>Implied Operating Cash Need</td><td class="num">${fmtMoney(r.impliedCashNeed)}</td></tr>
+    <tr><td>Current Operating Account Balance</td><td class="num">${fmtMoney(r.currentOpBalance)}</td></tr>
+    <tr class="total"><td>Operating Cash Gap vs. Current Balance</td><td class="num">${fmtMoney(r.gap)}</td></tr>
+  </table>`;
+}
+
+/* cover field bindings */
+['c_name','c_company','c_by','c_date'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', e=>{
+    const map={c_name:'name',c_company:'company',c_by:'by',c_date:'date'};
+    D.cover[map[id]] = e.target.value;
+  });
+});
+
+function resetAll(){
+  if(!confirm('Clear all inputs? This cannot be undone.')) return;
+  initData();
+  registerStore('s1', D.s1); registerStore('s2', D.s2); registerStore('s3', D.s3);
+  registerStore('s5', D.s5); registerStore('s6', D.s6); registerStore('s8', D.s8);
+  registerStore('s10', D.s10);
+  D._auditId = null;
+  document.getElementById('c_name').value=''; document.getElementById('c_company').value='';
+  document.getElementById('c_by').value='Armen Grigorian'; document.getElementById('c_date').value='';
+  renderInputSections();
+}
+
+/* ============================================================
+   SUPABASE — same project as the rest of the cobalt-* tool suite.
+   Raw REST/Auth calls (no supabase-js), matching the existing pattern
+   so logins carry across every tool sharing this origin.
+   ============================================================ */
+var SUPABASE_URL = 'https://pdqywwxyibnapeytoalk.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_gAk4DGF0YlBxFQkcO92reQ_cb9H91lQ';
+var REST = SUPABASE_URL + '/rest/v1';
+var AUTH = SUPABASE_URL + '/auth/v1';
+var appState = { session: null };
+
+function sbHeaders(extra){
+  var h = { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' };
+  if(appState.session && appState.session.access_token){ h['Authorization'] = 'Bearer ' + appState.session.access_token; }
+  return Object.assign(h, extra||{});
+}
+async function authSignIn(email, password){
+  var res = await fetch(AUTH+'/token?grant_type=password', { method:'POST', headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ email:email, password:password }) });
+  var data = await res.json();
+  if(!res.ok) throw new Error(data.error_description || data.msg || 'Incorrect email or password');
+  return data;
+}
+async function authRefresh(refreshToken){
+  var res = await fetch(AUTH+'/token?grant_type=refresh_token', { method:'POST', headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' }, body: JSON.stringify({ refresh_token:refreshToken }) });
+  var data = await res.json();
+  if(!res.ok) throw new Error('refresh failed');
+  return data;
+}
+function saveSession(data){
+  var session = { access_token:data.access_token, refresh_token:data.refresh_token, expires_at: Date.now() + (data.expires_in||3600)*1000, email: data.user && data.user.email };
+  appState.session = session;
+  try{ localStorage.setItem('cobalt_session', JSON.stringify(session)); }catch(e){}
+}
+function loadStoredSession(){
+  try{ var raw = localStorage.getItem('cobalt_session'); if(raw) appState.session = JSON.parse(raw); }catch(e){ appState.session = null; }
+}
+function clearSession(){
+  appState.session = null;
+  try{ localStorage.removeItem('cobalt_session'); }catch(e){}
+}
+async function ensureValidSession(){
+  if(!appState.session) return false;
+  if(Date.now() < appState.session.expires_at - 60000) return true;
+  try{ saveSession(await authRefresh(appState.session.refresh_token)); return true; }
+  catch(e){ clearSession(); return false; }
+}
+
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+
+/* ---- serialize / load the current audit ---- */
+function serializeD(){
+  return { cover:D.cover, s1:D.s1, s2:D.s2, s3:D.s3, s5:D.s5, s6:D.s6, s8:D.s8, s10:D.s10, s11:D.s11, s12:D.s12, ex2:D.ex2 };
+}
+function applyLoadedData(saved){
+  initData();
+  Object.keys(saved||{}).forEach(k=>{ if(D[k] !== undefined && saved[k] !== undefined) D[k] = saved[k]; });
+  registerStore('s1', D.s1); registerStore('s2', D.s2); registerStore('s3', D.s3);
+  registerStore('s5', D.s5); registerStore('s6', D.s6); registerStore('s8', D.s8);
+  registerStore('s10', D.s10);
+  document.getElementById('c_name').value = D.cover.name||'';
+  document.getElementById('c_company').value = D.cover.company||'';
+  document.getElementById('c_by').value = D.cover.by||'Armen Grigorian';
+  document.getElementById('c_date').value = D.cover.date||'';
+}
+
+/* ---- Supabase CRUD for treasury_audits ---- */
+async function fetchAllAudits(){
+  var res = await fetch(REST+'/treasury_audits?select=id,company_name,contact_name,prepared_by,audit_date,updated_at,created_by&order=updated_at.desc', { headers: sbHeaders() });
+  if(!res.ok) throw new Error('fetch failed');
+  return await res.json();
+}
+async function fetchAllAuditsFull(){
+  var res = await fetch(REST+'/treasury_audits?select=*&order=updated_at.desc', { headers: sbHeaders() });
+  if(!res.ok) throw new Error('fetch failed');
+  return await res.json();
+}
+async function fetchAuditById(id){
+  var res = await fetch(REST+'/treasury_audits?id=eq.'+encodeURIComponent(id)+'&select=*', { headers: sbHeaders() });
+  if(!res.ok) throw new Error('fetch failed');
+  var rows = await res.json();
+  return rows.length ? rows[0] : null;
+}
+async function upsertAuditRemote(row){
+  var res = await fetch(REST+'/treasury_audits', {
+    method:'POST', headers: sbHeaders({ 'Prefer':'resolution=merge-duplicates,return=minimal' }),
+    body: JSON.stringify([row])
+  });
+  if(!res.ok) throw new Error('save failed');
+}
+async function deleteAuditRemote(id){
+  var res = await fetch(REST+'/treasury_audits?id=eq.'+encodeURIComponent(id), { method:'DELETE', headers: sbHeaders({'Prefer':'return=minimal'}) });
+  if(!res.ok) throw new Error('delete failed');
+}
+
+async function saveCurrentAudit(silent){
+  if(!D.cover.company && !D.cover.name){
+    if(!silent) toast('Add a company or contact name before saving');
+    return false;
+  }
+  if(!D._auditId) D._auditId = 'audit:'+Date.now()+Math.random().toString(36).slice(2,7);
+  var row = {
+    id: D._auditId,
+    company_name: D.cover.company||'',
+    contact_name: D.cover.name||'',
+    prepared_by: D.cover.by||'',
+    audit_date: D.cover.date || null,
+    data: serializeD(),
+    created_by: appState.session && appState.session.email
+  };
+  try{
+    await upsertAuditRemote(row);
+    D._dirty = false;
+    clearLocalDraft();
+    toast(silent ? 'Autosaved' : 'Saved');
+    return true;
+  }catch(e){ if(!silent) toast('Could not save — check your connection'); return false; }
+}
+
+setInterval(function(){
+  if(D._dirty && (D.cover.company || D.cover.name) && appState.session){
+    saveCurrentAudit(true);
+  }
+}, 60000);
+
+function newAudit(){
+  resetAllSilent();
+  showView('input');
+}
+function resetAllSilent(){
+  initData();
+  registerStore('s1', D.s1); registerStore('s2', D.s2); registerStore('s3', D.s3);
+  registerStore('s5', D.s5); registerStore('s6', D.s6); registerStore('s8', D.s8);
+  registerStore('s10', D.s10);
+  D._auditId = null;
+  D._dirty = false;
+  document.getElementById('c_name').value=''; document.getElementById('c_company').value='';
+  document.getElementById('c_by').value='Armen Grigorian'; document.getElementById('c_date').value='';
+  renderInputSections();
+}
+async function loadAuditIntoForm(id){
+  try{
+    var row = await fetchAuditById(id);
+    if(!row){ toast('Audit not found'); return; }
+    applyLoadedData(row.data||{});
+    D._auditId = row.id;
+    D._dirty = false;
+    renderInputSections();
+    showView('input');
+  }catch(e){ toast('Could not load that audit'); }
+}
+async function deleteAuditFromList(id){
+  if(!confirm('Delete this audit? This cannot be undone.')) return;
+  try{ await deleteAuditRemote(id); toast('Deleted'); fetchAndRenderAudits(); }
+  catch(e){ toast('Could not delete — check your connection'); }
+}
+let auditsCache = [];
+async function fetchAndRenderAudits(){
+  var el = document.getElementById('auditsList');
+  el.innerHTML = '<p class="hint">Loading…</p>';
+  try{
+    auditsCache = await fetchAllAudits();
+    renderAuditsList(document.getElementById('auditsSearch') ? document.getElementById('auditsSearch').value : '');
+  }catch(e){ el.innerHTML = '<div class="empty-state">Could not load audits — check your connection.</div>'; }
+}
+function renderAuditsList(searchTerm){
+  var el = document.getElementById('auditsList');
+  if(!auditsCache.length){ el.innerHTML = '<div class="empty-state">No saved audits yet. Start one from the "+ New Audit" button.</div>'; return; }
+  var term = (searchTerm||'').trim().toLowerCase();
+  var rows = !term ? auditsCache : auditsCache.filter(r=>
+    (r.company_name||'').toLowerCase().includes(term) || (r.contact_name||'').toLowerCase().includes(term) || (r.prepared_by||'').toLowerCase().includes(term)
+  );
+  if(!rows.length){ el.innerHTML = '<div class="empty-state">No audits match "'+escapeHTML(searchTerm)+'".</div>'; return; }
+  el.innerHTML = rows.map(r=>`
+    <div class="audit-row">
+      <div><div class="co">${escapeHTML(r.company_name||'(no company)')}</div><div class="meta">${escapeHTML(r.contact_name||'')}</div></div>
+      <div class="meta">Prepared by ${escapeHTML(r.prepared_by||'—')}</div>
+      <div class="meta">${r.audit_date||'—'}</div>
+      <div class="meta">Updated ${new Date(r.updated_at).toLocaleDateString()}</div>
+      <div style="display:flex;gap:6px;">
+        <button class="ghost" onclick="loadAuditIntoForm('${r.id}')">Open</button>
+        <button class="ghost btn-danger" onclick="deleteAuditFromList('${r.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ---- auth gate wiring ---- */
+function showAuthErr(msg){ var el=document.getElementById('authErr'); el.textContent=msg; el.classList.add('show'); }
+document.getElementById('authSubmit').addEventListener('click', async function(){
+  var email = document.getElementById('authEmail').value.trim();
+  var password = document.getElementById('authPassword').value;
+  if(!email || !password){ showAuthErr('Enter an email and password.'); return; }
+  document.getElementById('authSubmit').disabled = true;
+  try{
+    var data = await authSignIn(email, password);
+    saveSession(data);
+    await enterApp();
+  }catch(e){ showAuthErr(e.message || 'Incorrect email or password'); }
+  document.getElementById('authSubmit').disabled = false;
+});
+document.getElementById('toolSwitcher').addEventListener('change', function(){
+  if(this.value) window.location.href = this.value;
+});
+document.getElementById('signOutBtn').addEventListener('click', function(){
+  clearSession();
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('authGate').style.display = 'flex';
+  document.getElementById('authEmail').value=''; document.getElementById('authPassword').value='';
+});
+document.getElementById('saveAuditBtn').addEventListener('click', function(){ saveCurrentAudit(false); });
+
+document.getElementById('exportBackupBtn').addEventListener('click', async function(){
+  try{
+    var rows = await fetchAllAuditsFull();
+    var blob = new Blob([JSON.stringify(rows, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'treasury-audits-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast('Backup exported — '+rows.length+' audit(s)');
+  }catch(e){ toast('Could not export — check your connection'); }
+});
+document.getElementById('importBackupBtn').addEventListener('click', function(){
+  document.getElementById('backupInput').click();
+});
+document.getElementById('backupInput').addEventListener('change', function(e){
+  var file = e.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = async function(){
+    try{
+      var rows = JSON.parse(reader.result);
+      if(!Array.isArray(rows)) throw new Error('not an array');
+      if(!confirm('Import '+rows.length+' audit(s) from this backup? Existing audits with matching IDs will be overwritten.')) return;
+      for(var i=0;i<rows.length;i++){ await upsertAuditRemote(rows[i]); }
+      toast('Imported '+rows.length+' audit(s)');
+      fetchAndRenderAudits();
+    }catch(err){ toast('Could not read that backup file'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+async function enterApp(){
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  showView('audits');
+  checkForDraft();
+}
+(async function init(){
+  loadStoredSession();
+  var ok = await ensureValidSession();
+  if(ok){ await enterApp(); }
+  else { document.getElementById('authGate').style.display = 'flex'; document.getElementById('mainApp').style.display = 'none'; }
+})();
+renderInputSections();
+</script>
+</body>
+</html>
