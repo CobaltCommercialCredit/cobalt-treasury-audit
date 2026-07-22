@@ -219,8 +219,8 @@
     <select id="toolSwitcher" class="btn" style="cursor:pointer;">
       <option value="">Switch tool…</option>
       <option value="https://cobaltcommercialcredit.github.io/cobalt-hub/">🏠 Cobalt Terminal</option>
-      <option value="https://cobaltcommercialcredit.github.io/cobalt-prospect-engine/">Cobalt CRE Prospecting</option>
-      <option value="https://cobaltcommercialcredit.github.io/cobalt-debt-deals/">Cobalt Credit Prospecting</option>
+      <option value="https://cobaltcommercialcredit.github.io/cobalt-prospect-engine/">Cobalt CRE Cold Outreach</option>
+      <option value="https://cobaltcommercialcredit.github.io/cobalt-debt-deals/">Cobalt Pipeline</option>
       <option value="https://cobaltcommercialcredit.github.io/cobalt-slb-calculator/">SLB Calculator</option>
       <option value="https://cobaltcommercialcredit.github.io/cobalt-debt-capacity-calc/">Debt Capacity Calculator</option>
       <option value="https://cobaltcommercialcredit.github.io/cobalt-referral-partners/">Referral Partner Tracker</option>
@@ -277,7 +277,7 @@
         <label style="display:block;font-size:11.5px;color:var(--ink-soft);margin-bottom:4px;font-family:var(--chrome-body);text-transform:uppercase;letter-spacing:.04em;">Linked Pipeline Deal</label>
         <div id="linkedDealDisplay"></div>
         <div style="position:relative;">
-          <input type="text" id="dealSearchInput" placeholder="Search Cobalt Credit Prospecting by company name…" style="width:100%;border:1px solid var(--chrome-line);border-radius:6px;padding:8px 10px;font-family:var(--chrome-body);font-size:14px;" oninput="searchDealsDebounced(this.value)" autocomplete="off">
+          <input type="text" id="dealSearchInput" placeholder="Search Cobalt Pipeline by company name…" style="width:100%;border:1px solid var(--chrome-line);border-radius:6px;padding:8px 10px;font-family:var(--chrome-body);font-size:14px;" oninput="searchDealsDebounced(this.value)" autocomplete="off">
           <div id="dealSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--chrome-line);border-radius:8px;box-shadow:var(--shadow);z-index:20;margin-top:4px;max-height:220px;overflow-y:auto;"></div>
         </div>
       </div>
@@ -2084,7 +2084,7 @@ async function fetchAllAuditsFull(){
   return await res.json();
 }
 
-/* ---- link to a Cobalt Credit Prospecting (debt_deals) pipeline record ---- */
+/* ---- link to a Cobalt Pipeline (debt_deals) pipeline record ---- */
 let dealSearchTimer = null;
 function searchDealsDebounced(term){
   clearTimeout(dealSearchTimer);
@@ -2097,7 +2097,7 @@ async function searchDeals(term){
     var res = await fetch(REST+'/debt_deals?company_name=ilike.*'+encodeURIComponent(term)+'*&select=id,company_name,contact_name,stage&limit=8', { headers: sbHeaders() });
     if(!res.ok) throw new Error('search failed');
     var rows = await res.json();
-    if(!rows.length){ box.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--ink-soft);">No matches in Cobalt Credit Prospecting</div>'; box.style.display = 'block'; return; }
+    if(!rows.length){ box.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--ink-soft);">No matches in Cobalt Pipeline</div>'; box.style.display = 'block'; return; }
     box.innerHTML = rows.map(r=>`
       <div style="padding:10px 12px;font-size:13.5px;cursor:pointer;border-bottom:1px solid var(--surface-sunk);" onclick="linkDeal('${r.id}', ${JSON.stringify(r.company_name||'').replace(/"/g,'&quot;')})">
         <div style="font-weight:600;">${escapeHTML(r.company_name||'(no company)')}</div>
