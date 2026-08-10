@@ -4,12 +4,37 @@ on:
     - cron: '0 12 * * 1,4'  # Mondays and Thursdays at noon UTC
   workflow_dispatch:  # lets you trigger manually to test
 
+permissions:
+  contents: write  # required so this workflow can commit its own keep-alive marker
+
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 5  # fail cleanly instead of hanging if GitHub can't allocate a runner
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Ping Supabase
         run: |
-          curl -s "${{ secrets.SUPABASE_URL }}/rest/v1/settings?select=*&limit=1" \
+          curl -sf --retry 3 --retry-delay 5 \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/settings?select=*&limit=1" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+        # -f makes curl actually fail the step on a bad HTTP response (401/500/etc.)
+        # instead of silently reporting success like the old version did.
+        # --retry handles transient network blips without needing a whole new run.
+
+      - name: Record this run (also keeps the repo — and this workflow — active)
+        run: |
+          mkdir -p .github
+          echo "Last successful keep-alive ping: $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > .github/keep-alive-log.txt
+          git config user.name "keep-alive-bot"
+          git config user.email "actions@github.com"
+          git add .github/keep-alive-log.txt
+          git diff --staged --quiet || git commit -m "chore: keep-alive ping $(date -u +'%Y-%m-%d')"
+          git push
+        # GitHub only resets its own 60-day "disable this scheduled workflow"
+        # clock on real commits — an HTTP ping to Supabase doesn't count as
+        # repo activity to GitHub at all. This commit is what keeps GitHub
+        # from silently turning this workflow off after two quiet months.
